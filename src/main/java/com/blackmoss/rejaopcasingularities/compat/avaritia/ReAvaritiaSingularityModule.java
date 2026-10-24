@@ -64,6 +64,7 @@ public class ReAvaritiaSingularityModule implements IModule {
             "lapis_lazuli",
             "lead",
             "netherite",
+            "steel",
             "netherite_scrap",
             "neutron",
             "neutronium",
@@ -80,21 +81,14 @@ public class ReAvaritiaSingularityModule implements IModule {
             "packed_ice",
             "ice",
             "otherworld_wood",
-            "grains_of_vibrant",
-            "grains_of_presciense",
+            "grains_of_vibrancy",
+            "grains_of_prescience",
             "grains_of_the_end",
-            "grains_of_pizaellity");
+            "grains_of_pizeallity");
 
     public static final Set<String> FORCED = Set.of(
-            "resin",
-            "demonite_trim",
-            "spirit_attuned",
-            "iesnium",
-            "dark_steel",
-            "steel",
-            "bronze",
-            "quartz_enriched_copper",
-            "quartz_enriched_iron");
+            "resin"
+    );
 
     private static final Map<String, Identifier> INGREDIENTS = new TreeMap<>();
     private static boolean listenersRegistered;
