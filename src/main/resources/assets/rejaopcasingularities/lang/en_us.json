@@ -4,6 +4,7 @@
   "rejaopcasingularities.configuration.singularity_blacklist": "Additional materials that should not get a singularity. Materials that already have an Avaritia singularity and the always excluded materials are skipped.",
   "rejaopcasingularities.configuration.material_count": "The amount of items required to create this material's singularity.",
   "rejaopcasingularities.configuration.material_time_cost": "The time required to create this material's singularity, in ticks. -1 uses the default value.",
+  "tooltip.rejaopcasingularities.egregious_singularity": "I've started.",
   "item.rejaopcasingularities.nitronic_singularity": "Nitronic Singularity",
   "item.rejaopcasingularities.psychotic_singularity": "Psychotic Singularity",
   "item.rejaopcasingularities.sphaghettic_singularity": "Sphaghettic Singularity",

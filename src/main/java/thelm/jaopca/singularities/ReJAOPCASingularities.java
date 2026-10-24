@@ -1,19 +1,21 @@
 package thelm.jaopca.singularities;
 
-import java.util.List;
-
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Rarity;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import thelm.jaopca.singularities.compat.avaritia.EternalSingularityCompressionHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.util.List;
 
 @Mod(ReJAOPCASingularities.MODID)
 public class ReJAOPCASingularities {
@@ -107,7 +109,10 @@ public class ReJAOPCASingularities {
 
     public static final List<DeferredItem<Item>> COMPOUND_SINGULARITIES = COMPOUND_SINGULARITY_NAMES.stream()
             .map(name -> ITEMS.register(name + "_singularity",
-                    id -> new Item(new Item.Properties().stacksTo(1).setId(ResourceKey.create(Registries.ITEM, id)))))
+                    id -> new Item(new Item.Properties()
+                            .stacksTo(64)
+                            .rarity(Rarity.EPIC)
+                            .setId(ResourceKey.create(Registries.ITEM, id)))))
             .toList();
 
     public static Identifier identifier(String path) {
@@ -118,7 +123,17 @@ public class ReJAOPCASingularities {
         return new ItemStack(COMPOUND_SINGULARITIES.get(index).get());
     }
 
+    public static ItemStack compoundSingularity(String id) {
+        int index = 0;
+        for (int i = 0; i < COMPOUND_SINGULARITY_NAMES.size(); i++) {
+            if (COMPOUND_SINGULARITY_NAMES.get(i).equals(id))
+                index = i;
+        }
+        return compoundSingularity(index);
+    }
+
     public ReJAOPCASingularities(IEventBus modEventBus, ModContainer modContainer) {
         ITEMS.register(modEventBus);
+        modEventBus.addListener(EternalSingularityCompressionHandler::onBuildCreativeModeTabContents);
     }
 }
