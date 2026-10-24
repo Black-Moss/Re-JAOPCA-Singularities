@@ -8,28 +8,28 @@ logoFile = "logo.png"
 authors = "${mod_authors}"
 description = "${mod_description}"
 
-[[dependencies.${mod_id}]]
+[[dependencies.${ mod_id }]]
 modId = "neoforge"
 type = "required"
 versionRange = "[${neo_version},)"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.${mod_id}]]
+[[dependencies.${ mod_id }]]
 modId = "minecraft"
 type = "required"
 versionRange = "${minecraft_version_range}"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.${mod_id}]]
+[[dependencies.${ mod_id }]]
 modId = "jaopca"
 type = "required"
 versionRange = "[6.0.2.2,)"
 ordering = "AFTER"
 side = "BOTH"
 
-[[dependencies.${mod_id}]]
+[[dependencies.${ mod_id }]]
 modId = "avaritia"
 type = "required"
 versionRange = "[1.4.2,)"
