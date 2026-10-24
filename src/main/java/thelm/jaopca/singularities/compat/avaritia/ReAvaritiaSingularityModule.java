@@ -6,18 +6,22 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import committee.nova.mods.avaritia.core.singularity.Singularity;
 import committee.nova.mods.avaritia.core.singularity.SingularityReloadListener;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import thelm.jaopca.api.JAOPCAApi;
 import thelm.jaopca.api.config.IDynamicSpecConfig;
 import thelm.jaopca.api.helpers.IMiscHelper;
 import thelm.jaopca.api.materials.IMaterial;
@@ -74,15 +78,29 @@ public class ReAvaritiaSingularityModule implements IModule {
             "redstone",
             "refined_obsidian",
             "silver",
-            "steel",
             "tin",
             "uranium",
             "packed_ice",
             "ice",
             "otherworld_wood");
 
+    public static final Set<String> FORCED = Set.of(
+            "resin",
+            "demonite_trim",
+            "spirit_attuned",
+            "iesnium",
+            "dark_steel",
+            "steel",
+            "bronze",
+            "quartz_enriched_copper",
+            "quartz_enriched_iron");
+
+    private static final Map<String, Identifier> INGREDIENTS = new TreeMap<>();
+    private static boolean tagCheckRegistered;
+
     private Map<IMaterial, IDynamicSpecConfig> configs = Map.of();
     private Set<String> extraBlacklist = new TreeSet<>();
+    private final Set<IMaterial> singularityMaterials = new TreeSet<>();
 
     private IDynamicSpecConfig moduleConfig;
     private int defaultCount = 1000;
@@ -128,47 +146,119 @@ public class ReAvaritiaSingularityModule implements IModule {
         if (moduleConfig != null) {
             readModuleConfig(moduleConfig);
         }
-        JAOPCAApi api = ApiImpl.INSTANCE;
-        IMiscHelper miscHelper = MiscHelper.INSTANCE;
-        Set<Identifier> itemTags = api.getItemTags();
+        if (!tagCheckRegistered) {
+            tagCheckRegistered = true;
+            NeoForge.EVENT_BUS.addListener(ReAvaritiaSingularityModule::pruneEmptyIngredientSingularities);
+        }
+        Set<IMaterial> materials = new TreeSet<>(moduleData.getMaterials());
+        for (String forcedName : FORCED) {
+            IMaterial forced = findMaterial(forcedName);
+            if (forced != null) {
+                materials.add(forced);
+            } else {
+                LOGGER.warn("Forced singularity material {} was not found in JAOPCA materials", forcedName);
+            }
+        }
         int registered = 0;
-        for (IMaterial material : moduleData.getMaterials()) {
-            if (isSkipped(material)) {
-                continue;
-            }
-            Identifier materialTag = miscHelper.getTagLocation(material.getType().getFormName(), material.getName());
-            if (!itemTags.contains(materialTag)) {
-                LOGGER.debug("Skipping singularity for material {} as tag {} does not exist", material.getName(), materialTag);
-                continue;
-            }
-            try {
-                IDynamicSpecConfig config = configs.get(material);
-                if (config == null) {
-                    LOGGER.warn("No config available for material {}, skipping singularity", material.getName());
-                    continue;
-                }
-                int count = config.getDefinedInt("avaritia_singularity.count", defaultCount, 1, Integer.MAX_VALUE,
-                        ConfigLocalization.get(ConfigLocalization.MATERIAL_COUNT));
-                int timeCost = config.getDefinedInt("avaritia_singularity.timeCost", defaultTimeCost, -1, Integer.MAX_VALUE,
-                        ConfigLocalization.get(ConfigLocalization.MATERIAL_TIME_COST));
-                Identifier singularityId = ReJAOPCASingularities.identifier(material.getName());
-                Singularity singularity = createSingularity(singularityId, materialTag, count, timeCost, material, config);
-                SingularityReloadListener.INSTANCE.registerSingularity(singularity);
-                api.registerRecipe(
-                        ReJAOPCASingularities.identifier(material.getName() + "_singularity"),
-                        new SingularityCompressorRecipeSerializer(singularityId, materialTag, singularity));
+        for (IMaterial material : materials) {
+            if (registerSingularity(material)) {
                 ++registered;
-            } catch (IllegalArgumentException | IllegalStateException e) {
-                LOGGER.error("Unable to register singularity for material {}", material.getName(), e);
             }
         }
         LOGGER.info("Registered {} Avaritia singularities for JAOPCA materials", registered);
     }
 
+    private static IMaterial findMaterial(String name) {
+        for (IMaterial material : ApiImpl.INSTANCE.getMaterials()) {
+            if (material.getName().equals(name) || material.getAlternativeNames().contains(name)) {
+                return material;
+            }
+        }
+        return null;
+    }
+
+    private boolean registerSingularity(IMaterial material) {
+        if (isSkipped(material)) {
+            return false;
+        }
+        Identifier materialTag = findIngredientTag(material);
+        if (materialTag == null) {
+            LOGGER.warn("Skipping singularity for material {} as no item tag was found", material.getName());
+            return false;
+        }
+        try {
+            IDynamicSpecConfig config = configs.get(material);
+            if (config == null) {
+                LOGGER.warn("No config available for material {}, skipping singularity", material.getName());
+                return false;
+            }
+            int count = config.getDefinedInt("avaritia_singularity.count", defaultCount, 1, Integer.MAX_VALUE,
+                    ConfigLocalization.get(ConfigLocalization.MATERIAL_COUNT));
+            int timeCost = config.getDefinedInt("avaritia_singularity.timeCost", defaultTimeCost, -1, Integer.MAX_VALUE,
+                    ConfigLocalization.get(ConfigLocalization.MATERIAL_TIME_COST));
+            Identifier singularityId = ReJAOPCASingularities.identifier(material.getName());
+            Singularity singularity = createSingularity(singularityId, materialTag, count, timeCost, material, config);
+            SingularityReloadListener.INSTANCE.registerSingularity(singularity);
+            Identifier recipeId = ReJAOPCASingularities.identifier(material.getName() + "_singularity");
+            if (!ApiImpl.INSTANCE.registerRecipe(recipeId,
+                    new SingularityCompressorRecipeSerializer(singularityId, materialTag, singularity))) {
+                LOGGER.warn("Compressor recipe {} was not injected (duplicate id or recipe blacklist)", recipeId);
+            }
+            INGREDIENTS.put(material.getName(), materialTag);
+            singularityMaterials.add(material);
+            return true;
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            LOGGER.error("Unable to register singularity for material {}", material.getName(), e);
+            return false;
+        }
+    }
+
+    private static Identifier findIngredientTag(IMaterial material) {
+        Set<Identifier> itemTags = ApiImpl.INSTANCE.getItemTags();
+        IMiscHelper miscHelper = MiscHelper.INSTANCE;
+        Identifier tag = miscHelper.getTagLocation(material.getType().getFormName(), material.getName());
+        if (itemTags.contains(tag)) {
+            return tag;
+        }
+        if (isForced(material)) {
+            for (String form : List.of("ingots", "gems", "crystals", "dusts")) {
+                Identifier alternative = miscHelper.getTagLocation(form, material.getName());
+                if (itemTags.contains(alternative)) {
+                    return alternative;
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean isSkipped(IMaterial material) {
+        if (matches(material, extraBlacklist)) {
+            return true;
+        }
+        return !isForced(material) && matches(material, ALWAYS_SKIPPED);
+    }
+
+    private static boolean isForced(IMaterial material) {
+        return matches(material, FORCED);
+    }
+
+    private static boolean matches(IMaterial material, Set<String> names) {
+        if (names.contains(material.getName())) {
+            return true;
+        }
+        for (String alternativeName : material.getAlternativeNames()) {
+            if (names.contains(alternativeName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public void onCreateResourcePack(IModuleData moduleData, IInMemoryResourcePack resourcePack) {
+        Set<IMaterial> materials = singularityMaterials.isEmpty() ? moduleData.getMaterials() : singularityMaterials;
         JsonObject english = new JsonObject();
-        for (IMaterial material : moduleData.getMaterials()) {
+        for (IMaterial material : materials) {
             english.addProperty(getTranslationKey(material), splitAndCapitalize(material.getName()));
         }
         resourcePack.putJson(PackType.CLIENT_RESOURCES, ReJAOPCASingularities.identifier("lang/en_us.json"), english);
@@ -188,7 +278,7 @@ public class ReAvaritiaSingularityModule implements IModule {
                     }
                     JsonObject localization = parsed.getAsJsonObject();
                     JsonObject lang = new JsonObject();
-                    for (IMaterial material : moduleData.getMaterials()) {
+                    for (IMaterial material : materials) {
                         JsonElement name = localization.get("jaopca.material." + material.getName());
                         if (name != null && name.isJsonPrimitive() && !name.getAsString().isEmpty()) {
                             lang.addProperty(getTranslationKey(material), name.getAsString());
@@ -206,16 +296,40 @@ public class ReAvaritiaSingularityModule implements IModule {
         }
     }
 
-    private boolean isSkipped(IMaterial material) {
-        if (ALWAYS_SKIPPED.contains(material.getName()) || extraBlacklist.contains(material.getName())) {
-            return true;
-        }
-        for (String alternativeName : material.getAlternativeNames()) {
-            if (ALWAYS_SKIPPED.contains(alternativeName) || extraBlacklist.contains(alternativeName)) {
-                return true;
+    private static void pruneEmptyIngredientSingularities(ServerStartedEvent event) {
+        SingularityReloadListener listener = SingularityReloadListener.INSTANCE;
+        Map<Identifier, Singularity> runSingularities = listener.getRunSingularities();
+        List<Identifier> removed = new ArrayList<>();
+        for (Map.Entry<String, Identifier> entry : INGREDIENTS.entrySet()) {
+            Identifier id = ReJAOPCASingularities.identifier(entry.getKey());
+            if (!runSingularities.containsKey(id) || tagSize(entry.getValue()) > 0) {
+                continue;
+            }
+            removed.add(id);
+            Identifier legacyTag = Identifier.fromNamespaceAndPath("forge", entry.getValue().getPath());
+            int legacySize = tagSize(legacyTag);
+            if (legacySize > 0) {
+                LOGGER.warn("Removing singularity {}: {} is empty but {} has {} items (old tag convention)",
+                        entry.getKey(), entry.getValue(), legacyTag, legacySize);
+            } else {
+                LOGGER.warn("Removing singularity {} as its ingredient tag {} is empty", entry.getKey(), entry.getValue());
             }
         }
-        return false;
+        if (removed.isEmpty()) {
+            return;
+        }
+        removed.forEach(runSingularities::remove);
+        listener.setRunSingularities(runSingularities);
+        listener.finalizeScriptTransaction();
+        LOGGER.info("Removed {} singularities with empty ingredient tags", removed.size());
+    }
+
+    private static int tagSize(Identifier tagLocation) {
+        int size = 0;
+        for (Holder<Item> ignored : BuiltInRegistries.ITEM.getTagOrEmpty(TagKey.create(Registries.ITEM, tagLocation))) {
+            ++size;
+        }
+        return size;
     }
 
     private static Singularity createSingularity(
