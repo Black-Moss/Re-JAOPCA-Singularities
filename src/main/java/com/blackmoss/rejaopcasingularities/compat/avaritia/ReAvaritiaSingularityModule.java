@@ -1,4 +1,4 @@
-package thelm.jaopca.singularities.compat.avaritia;
+package com.blackmoss.rejaopcasingularities.compat.avaritia;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -29,9 +29,9 @@ import thelm.jaopca.api.modules.IModule;
 import thelm.jaopca.api.modules.IModuleData;
 import thelm.jaopca.api.modules.JAOPCAModule;
 import thelm.jaopca.api.resources.IInMemoryResourcePack;
-import thelm.jaopca.singularities.ReJAOPCASingularities;
-import thelm.jaopca.singularities.compat.avaritia.recipes.SingularityCompressorRecipeSerializer;
-import thelm.jaopca.singularities.util.ConfigLocalization;
+import com.blackmoss.rejaopcasingularities.ReJAOPCASingularities;
+import com.blackmoss.rejaopcasingularities.compat.avaritia.recipes.SingularityCompressorRecipeSerializer;
+import com.blackmoss.rejaopcasingularities.util.ConfigLocalization;
 import thelm.jaopca.utils.ApiImpl;
 import thelm.jaopca.utils.MiscHelper;
 

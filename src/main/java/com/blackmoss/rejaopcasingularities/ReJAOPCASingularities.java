@@ -1,4 +1,4 @@
-package thelm.jaopca.singularities;
+package com.blackmoss.rejaopcasingularities;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
@@ -11,7 +11,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import thelm.jaopca.singularities.compat.avaritia.EternalSingularityCompressionHandler;
+import com.blackmoss.rejaopcasingularities.compat.avaritia.EternalSingularityCompressionHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

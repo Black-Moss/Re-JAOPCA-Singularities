@@ -1,4 +1,4 @@
-package thelm.jaopca.singularities.compat.avaritia;
+package com.blackmoss.rejaopcasingularities.compat.avaritia;
 
 import committee.nova.mods.avaritia.Const;
 import committee.nova.mods.avaritia.api.init.event.RegisterRecipesEvent;
@@ -20,7 +20,7 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
-import thelm.jaopca.singularities.ReJAOPCASingularities;
+import com.blackmoss.rejaopcasingularities.ReJAOPCASingularities;
 
 import java.util.Comparator;
 import java.util.List;

@@ -1,4 +1,4 @@
-package thelm.jaopca.singularities.compat.avaritia;
+package com.blackmoss.rejaopcasingularities.compat.avaritia;
 
 import java.util.Iterator;
 import java.util.List;

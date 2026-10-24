@@ -1,4 +1,4 @@
-package thelm.jaopca.singularities.compat.avaritia.recipes;
+package com.blackmoss.rejaopcasingularities.compat.avaritia.recipes;
 
 import java.util.Objects;
 

@@ -1,7 +1,7 @@
-package thelm.jaopca.singularities.util;
+package com.blackmoss.rejaopcasingularities.util;
 
 import net.minecraft.locale.Language;
-import thelm.jaopca.singularities.ReJAOPCASingularities;
+import com.blackmoss.rejaopcasingularities.ReJAOPCASingularities;
 
 import java.util.Map;
 
