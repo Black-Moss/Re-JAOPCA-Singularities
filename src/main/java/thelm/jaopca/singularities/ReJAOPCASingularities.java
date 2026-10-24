@@ -1,4 +1,4 @@
-package com.blackmoss.rejaopcasingularities;
+package thelm.jaopca.singularities;
 
 import org.slf4j.Logger;
 
