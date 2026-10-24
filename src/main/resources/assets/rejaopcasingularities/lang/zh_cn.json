@@ -1,0 +1,7 @@
+{
+  "config.rejaopcasingularities.avaritia_singularity.count": "默认情况下合成一个奇点需要的物品数量。",
+  "config.rejaopcasingularities.avaritia_singularity.timeCost": "默认情况下合成一个奇点需要的时间（刻）。-1 表示沿用无尽贪婪的数值。",
+  "config.rejaopcasingularities.avaritia_singularity.singularityBlacklist": "额外不生成奇点的材料。无尽贪婪自带奇点的材料和排除项已经固定跳过，不需要写在这里。",
+  "config.rejaopcasingularities.avaritia_singularity.materialCount": "合成该材料的一个奇点需要的物品数量。",
+  "config.rejaopcasingularities.avaritia_singularity.materialTimeCost": "合成该材料的一个奇点需要的时间（刻）。-1 表示沿用默认值。"
+}

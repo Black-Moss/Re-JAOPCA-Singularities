@@ -1,0 +1,7 @@
+{
+  "config.rejaopcasingularities.avaritia_singularity.count": "The default amount of items required to create one singularity.",
+  "config.rejaopcasingularities.avaritia_singularity.timeCost": "The default time required to create one singularity, in ticks. -1 uses Avaritia's value.",
+  "config.rejaopcasingularities.avaritia_singularity.singularityBlacklist": "Additional materials that should not get a singularity. Materials that already have an Avaritia singularity and the always excluded materials are skipped.",
+  "config.rejaopcasingularities.avaritia_singularity.materialCount": "The amount of items required to create this material's singularity.",
+  "config.rejaopcasingularities.avaritia_singularity.materialTimeCost": "The time required to create this material's singularity, in ticks. -1 uses the default value."
+}

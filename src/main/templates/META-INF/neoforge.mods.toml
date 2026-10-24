@@ -25,13 +25,13 @@ side = "BOTH"
 [[dependencies.${mod_id}]]
 modId = "jaopca"
 type = "required"
-versionRange = "[${jaopca_version},)"
+versionRange = "[6.0.2.2,)"
 ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.${mod_id}]]
 modId = "avaritia"
 type = "required"
-versionRange = "[${re_avaritia_version},)"
+versionRange = "[1.4.2,)"
 ordering = "AFTER"
 side = "BOTH"
