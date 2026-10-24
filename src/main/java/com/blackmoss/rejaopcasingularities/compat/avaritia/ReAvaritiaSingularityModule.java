@@ -80,10 +80,10 @@ public class ReAvaritiaSingularityModule implements IModule {
             "packed_ice",
             "ice",
             "otherworld_wood",
-            "granins_of_vibrant",
-            "granins_of_presciense",
-            "granins_of_end",
-            "granins_of_pizaellity");
+            "grains_of_vibrant",
+            "grains_of_presciense",
+            "grains_of_the_end",
+            "grains_of_pizaellity");
 
     public static final Set<String> FORCED = Set.of(
             "resin",
