@@ -1,5 +1,8 @@
 package com.blackmoss.rejaopcasingularities.compat.avaritia;
 
+import com.blackmoss.rejaopcasingularities.ReJAOPCASingularities;
+import com.blackmoss.rejaopcasingularities.compat.avaritia.recipes.SingularityCompressorRecipeSerializer;
+import com.blackmoss.rejaopcasingularities.util.ConfigLocalization;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
@@ -29,9 +32,6 @@ import thelm.jaopca.api.modules.IModule;
 import thelm.jaopca.api.modules.IModuleData;
 import thelm.jaopca.api.modules.JAOPCAModule;
 import thelm.jaopca.api.resources.IInMemoryResourcePack;
-import com.blackmoss.rejaopcasingularities.ReJAOPCASingularities;
-import com.blackmoss.rejaopcasingularities.compat.avaritia.recipes.SingularityCompressorRecipeSerializer;
-import com.blackmoss.rejaopcasingularities.util.ConfigLocalization;
 import thelm.jaopca.utils.ApiImpl;
 import thelm.jaopca.utils.MiscHelper;
 
@@ -94,78 +94,12 @@ public class ReAvaritiaSingularityModule implements IModule {
 
     private static final Map<String, Identifier> INGREDIENTS = new TreeMap<>();
     private static boolean listenersRegistered;
-
+    private final Set<IMaterial> singularityMaterials = new TreeSet<>();
     private Map<IMaterial, IDynamicSpecConfig> configs = Map.of();
     private Set<String> extraBlacklist = new TreeSet<>();
-    private final Set<IMaterial> singularityMaterials = new TreeSet<>();
-
     private IDynamicSpecConfig moduleConfig;
     private int defaultCount = 1000;
     private int defaultTimeCost = -1;
-
-    @Override
-    public String getName() {
-        return "avaritia_singularity";
-    }
-
-    @Override
-    public Set<MaterialType> getMaterialTypes() {
-        return EnumSet.allOf(MaterialType.class);
-    }
-
-    @Override
-    public Set<String> getDefaultMaterialBlacklist() {
-        return ALWAYS_SKIPPED;
-    }
-
-    @Override
-    public void defineModuleConfig(IModuleData moduleData, IDynamicSpecConfig config) {
-        moduleConfig = config;
-        readModuleConfig(config);
-    }
-
-    private void readModuleConfig(IDynamicSpecConfig config) {
-        defaultCount = config.getDefinedInt("general.count", 1000, 1, Integer.MAX_VALUE,
-                ConfigLocalization.get(ConfigLocalization.COUNT));
-        defaultTimeCost = config.getDefinedInt("general.timeCost", -1, -1, Integer.MAX_VALUE,
-                ConfigLocalization.get(ConfigLocalization.TIME_COST));
-        extraBlacklist = new TreeSet<>(config.getDefinedStringList("general.singularityBlacklist", new ArrayList<>(),
-                ConfigLocalization.get(ConfigLocalization.BLACKLIST)));
-    }
-
-    @Override
-    public void onMaterialConfigAvailable(IModuleData moduleData, Map<IMaterial, IDynamicSpecConfig> configs) {
-        this.configs = configs;
-    }
-
-    @Override
-    public void onCommonSetup(IModuleData moduleData, FMLCommonSetupEvent event) {
-        if (moduleConfig != null) {
-            readModuleConfig(moduleConfig);
-        }
-        if (!listenersRegistered) {
-            listenersRegistered = true;
-            NeoForge.EVENT_BUS.addListener(ReAvaritiaSingularityModule::pruneEmptyIngredientSingularities);
-            NeoForge.EVENT_BUS.addListener(EternalSingularityCompressionHandler::onRegisterRecipes);
-            NeoForge.EVENT_BUS.addListener(EternalSingularityCompressionHandler::onItemToolTip);
-        }
-        Set<IMaterial> materials = new TreeSet<>(moduleData.getMaterials());
-        for (String forcedName : FORCED) {
-            IMaterial forced = findMaterial(forcedName);
-            if (forced != null) {
-                materials.add(forced);
-            } else {
-                ReJAOPCASingularities.LOGGER.warn("Forced singularity material {} was not found in JAOPCA materials", forcedName);
-            }
-        }
-        int registered = 0;
-        for (IMaterial material : materials) {
-            if (registerSingularity(material)) {
-                ++registered;
-            }
-        }
-        ReJAOPCASingularities.LOGGER.info("Registered {} Avaritia singularities for JAOPCA materials", registered);
-    }
 
     private static IMaterial findMaterial(String name) {
         for (IMaterial material : ApiImpl.INSTANCE.getMaterials()) {
@@ -174,42 +108,6 @@ public class ReAvaritiaSingularityModule implements IModule {
             }
         }
         return null;
-    }
-
-    private boolean registerSingularity(IMaterial material) {
-        if (isSkipped(material)) {
-            return false;
-        }
-        Identifier materialTag = findIngredientTag(material);
-        if (materialTag == null) {
-            ReJAOPCASingularities.LOGGER.warn("Skipping singularity for material {} as no item tag was found", material.getName());
-            return false;
-        }
-        try {
-            IDynamicSpecConfig config = configs.get(material);
-            if (config == null) {
-                ReJAOPCASingularities.LOGGER.warn("No config available for material {}, skipping singularity", material.getName());
-                return false;
-            }
-            int count = config.getDefinedInt("avaritia_singularity.count", defaultCount, 1, Integer.MAX_VALUE,
-                    ConfigLocalization.get(ConfigLocalization.MATERIAL_COUNT));
-            int timeCost = config.getDefinedInt("avaritia_singularity.timeCost", defaultTimeCost, -1, Integer.MAX_VALUE,
-                    ConfigLocalization.get(ConfigLocalization.MATERIAL_TIME_COST));
-            Identifier singularityId = ReJAOPCASingularities.identifier(material.getName());
-            Singularity singularity = createSingularity(singularityId, materialTag, count, timeCost, material, config);
-            SingularityReloadListener.INSTANCE.registerSingularity(singularity);
-            Identifier recipeId = ReJAOPCASingularities.identifier(material.getName() + "_singularity");
-            if (!ApiImpl.INSTANCE.registerRecipe(recipeId,
-                    new SingularityCompressorRecipeSerializer(singularityId, materialTag, singularity))) {
-                ReJAOPCASingularities.LOGGER.warn("Compressor recipe {} was not injected (duplicate id or recipe blacklist)", recipeId);
-            }
-            INGREDIENTS.put(material.getName(), materialTag);
-            singularityMaterials.add(material);
-            return true;
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            ReJAOPCASingularities.LOGGER.error("Unable to register singularity for material {}", material.getName(), e);
-            return false;
-        }
     }
 
     private static Identifier findIngredientTag(IMaterial material) {
@@ -230,13 +128,6 @@ public class ReAvaritiaSingularityModule implements IModule {
         return null;
     }
 
-    private boolean isSkipped(IMaterial material) {
-        if (matches(material, extraBlacklist)) {
-            return true;
-        }
-        return !isForced(material) && matches(material, ALWAYS_SKIPPED);
-    }
-
     private static boolean isForced(IMaterial material) {
         return matches(material, FORCED);
     }
@@ -251,48 +142,6 @@ public class ReAvaritiaSingularityModule implements IModule {
             }
         }
         return false;
-    }
-
-    @Override
-    public void onCreateResourcePack(IModuleData moduleData, IInMemoryResourcePack resourcePack) {
-        Set<IMaterial> materials = singularityMaterials.isEmpty() ? moduleData.getMaterials() : singularityMaterials;
-        JsonObject english = new JsonObject();
-        for (IMaterial material : materials) {
-            english.addProperty(getTranslationKey(material), splitAndCapitalize(material.getName()));
-        }
-        resourcePack.putJson(PackType.CLIENT_RESOURCES, ReJAOPCASingularities.identifier("lang/en_us.json"), english);
-
-        Path langDir = FMLPaths.CONFIGDIR.get().resolve("jaopca").resolve("lang");
-        try (DirectoryStream<Path> files = Files.newDirectoryStream(langDir, "*.json")) {
-            for (Path file : files) {
-                String fileName = file.getFileName().toString();
-                String language = fileName.substring(0, fileName.length() - ".json".length());
-                if (language.equals("en_us")) {
-                    continue;
-                }
-                try {
-                    JsonElement parsed = JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8));
-                    if (!parsed.isJsonObject()) {
-                        continue;
-                    }
-                    JsonObject localization = parsed.getAsJsonObject();
-                    JsonObject lang = new JsonObject();
-                    for (IMaterial material : materials) {
-                        JsonElement name = localization.get("jaopca.material." + material.getName());
-                        if (name != null && name.isJsonPrimitive() && !name.getAsString().isEmpty()) {
-                            lang.addProperty(getTranslationKey(material), name.getAsString());
-                        }
-                    }
-                    if (!lang.isEmpty()) {
-                        resourcePack.putJson(PackType.CLIENT_RESOURCES, ReJAOPCASingularities.identifier("lang/" + language + ".json"), lang);
-                    }
-                } catch (IOException | JsonParseException | UnsupportedOperationException e) {
-                    ReJAOPCASingularities.LOGGER.warn("Unable to read JAOPCA localization file {}", file, e);
-                }
-            }
-        } catch (IOException e) {
-            ReJAOPCASingularities.LOGGER.debug("Unable to read JAOPCA localization directory {}", langDir);
-        }
     }
 
     private static void pruneEmptyIngredientSingularities(ServerStartedEvent event) {
@@ -374,5 +223,154 @@ public class ReAvaritiaSingularityModule implements IModule {
                 filter(s -> !s.isEmpty()).
                 map(s -> s.substring(0, 1).toUpperCase(Locale.ROOT) + s.substring(1)).
                 collect(Collectors.joining(" "));
+    }
+
+    @Override
+    public String getName() {
+        return "avaritia_singularity";
+    }
+
+    @Override
+    public Set<MaterialType> getMaterialTypes() {
+        return EnumSet.allOf(MaterialType.class);
+    }
+
+    @Override
+    public Set<String> getDefaultMaterialBlacklist() {
+        return ALWAYS_SKIPPED;
+    }
+
+    @Override
+    public void defineModuleConfig(IModuleData moduleData, IDynamicSpecConfig config) {
+        moduleConfig = config;
+        readModuleConfig(config);
+    }
+
+    private void readModuleConfig(IDynamicSpecConfig config) {
+        defaultCount = config.getDefinedInt("general.count", 1000, 1, Integer.MAX_VALUE,
+                ConfigLocalization.get(ConfigLocalization.COUNT));
+        defaultTimeCost = config.getDefinedInt("general.timeCost", -1, -1, Integer.MAX_VALUE,
+                ConfigLocalization.get(ConfigLocalization.TIME_COST));
+        extraBlacklist = new TreeSet<>(config.getDefinedStringList("general.singularityBlacklist", new ArrayList<>(),
+                ConfigLocalization.get(ConfigLocalization.BLACKLIST)));
+    }
+
+    @Override
+    public void onMaterialConfigAvailable(IModuleData moduleData, Map<IMaterial, IDynamicSpecConfig> configs) {
+        this.configs = configs;
+    }
+
+    @Override
+    public void onCommonSetup(IModuleData moduleData, FMLCommonSetupEvent event) {
+        if (moduleConfig != null) {
+            readModuleConfig(moduleConfig);
+        }
+        if (!listenersRegistered) {
+            listenersRegistered = true;
+            NeoForge.EVENT_BUS.addListener(ReAvaritiaSingularityModule::pruneEmptyIngredientSingularities);
+            NeoForge.EVENT_BUS.addListener(EternalSingularityCompressionHandler::onRegisterRecipes);
+            NeoForge.EVENT_BUS.addListener(EternalSingularityCompressionHandler::onItemToolTip);
+        }
+        Set<IMaterial> materials = new TreeSet<>(moduleData.getMaterials());
+        for (String forcedName : FORCED) {
+            IMaterial forced = findMaterial(forcedName);
+            if (forced != null) {
+                materials.add(forced);
+            } else {
+                ReJAOPCASingularities.LOGGER.warn("Forced singularity material {} was not found in JAOPCA materials", forcedName);
+            }
+        }
+        int registered = 0;
+        for (IMaterial material : materials) {
+            if (registerSingularity(material)) {
+                ++registered;
+            }
+        }
+        ReJAOPCASingularities.LOGGER.info("Registered {} Avaritia singularities for JAOPCA materials", registered);
+    }
+
+    private boolean registerSingularity(IMaterial material) {
+        if (isSkipped(material)) {
+            return false;
+        }
+        Identifier materialTag = findIngredientTag(material);
+        if (materialTag == null) {
+            ReJAOPCASingularities.LOGGER.warn("Skipping singularity for material {} as no item tag was found", material.getName());
+            return false;
+        }
+        try {
+            IDynamicSpecConfig config = configs.get(material);
+            if (config == null) {
+                ReJAOPCASingularities.LOGGER.warn("No config available for material {}, skipping singularity", material.getName());
+                return false;
+            }
+            int count = config.getDefinedInt("avaritia_singularity.count", defaultCount, 1, Integer.MAX_VALUE,
+                    ConfigLocalization.get(ConfigLocalization.MATERIAL_COUNT));
+            int timeCost = config.getDefinedInt("avaritia_singularity.timeCost", defaultTimeCost, -1, Integer.MAX_VALUE,
+                    ConfigLocalization.get(ConfigLocalization.MATERIAL_TIME_COST));
+            Identifier singularityId = ReJAOPCASingularities.identifier(material.getName());
+            Singularity singularity = createSingularity(singularityId, materialTag, count, timeCost, material, config);
+            SingularityReloadListener.INSTANCE.registerSingularity(singularity);
+            Identifier recipeId = ReJAOPCASingularities.identifier(material.getName() + "_singularity");
+            if (!ApiImpl.INSTANCE.registerRecipe(recipeId,
+                    new SingularityCompressorRecipeSerializer(singularityId, materialTag, singularity))) {
+                ReJAOPCASingularities.LOGGER.warn("Compressor recipe {} was not injected (duplicate id or recipe blacklist)", recipeId);
+            }
+            INGREDIENTS.put(material.getName(), materialTag);
+            singularityMaterials.add(material);
+            return true;
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            ReJAOPCASingularities.LOGGER.error("Unable to register singularity for material {}", material.getName(), e);
+            return false;
+        }
+    }
+
+    private boolean isSkipped(IMaterial material) {
+        if (matches(material, extraBlacklist)) {
+            return true;
+        }
+        return !isForced(material) && matches(material, ALWAYS_SKIPPED);
+    }
+
+    @Override
+    public void onCreateResourcePack(IModuleData moduleData, IInMemoryResourcePack resourcePack) {
+        Set<IMaterial> materials = singularityMaterials.isEmpty() ? moduleData.getMaterials() : singularityMaterials;
+        JsonObject english = new JsonObject();
+        for (IMaterial material : materials) {
+            english.addProperty(getTranslationKey(material), splitAndCapitalize(material.getName()));
+        }
+        resourcePack.putJson(PackType.CLIENT_RESOURCES, ReJAOPCASingularities.identifier("lang/en_us.json"), english);
+
+        Path langDir = FMLPaths.CONFIGDIR.get().resolve("jaopca").resolve("lang");
+        try (DirectoryStream<Path> files = Files.newDirectoryStream(langDir, "*.json")) {
+            for (Path file : files) {
+                String fileName = file.getFileName().toString();
+                String language = fileName.substring(0, fileName.length() - ".json".length());
+                if (language.equals("en_us")) {
+                    continue;
+                }
+                try {
+                    JsonElement parsed = JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8));
+                    if (!parsed.isJsonObject()) {
+                        continue;
+                    }
+                    JsonObject localization = parsed.getAsJsonObject();
+                    JsonObject lang = new JsonObject();
+                    for (IMaterial material : materials) {
+                        JsonElement name = localization.get("jaopca.material." + material.getName());
+                        if (name != null && name.isJsonPrimitive() && !name.getAsString().isEmpty()) {
+                            lang.addProperty(getTranslationKey(material), name.getAsString());
+                        }
+                    }
+                    if (!lang.isEmpty()) {
+                        resourcePack.putJson(PackType.CLIENT_RESOURCES, ReJAOPCASingularities.identifier("lang/" + language + ".json"), lang);
+                    }
+                } catch (IOException | JsonParseException | UnsupportedOperationException e) {
+                    ReJAOPCASingularities.LOGGER.warn("Unable to read JAOPCA localization file {}", file, e);
+                }
+            }
+        } catch (IOException e) {
+            ReJAOPCASingularities.LOGGER.debug("Unable to read JAOPCA localization directory {}", langDir);
+        }
     }
 }

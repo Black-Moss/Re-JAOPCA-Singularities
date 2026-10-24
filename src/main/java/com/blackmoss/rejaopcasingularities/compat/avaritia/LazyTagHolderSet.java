@@ -1,13 +1,6 @@
 package com.blackmoss.rejaopcasingularities.compat.avaritia;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-
 import com.mojang.datafixers.util.Either;
-
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderOwner;
 import net.minecraft.core.HolderSet;
@@ -18,16 +11,13 @@ import net.minecraft.util.Util;
 import net.minecraft.world.item.Item;
 import org.jspecify.annotations.NonNull;
 
-public class LazyTagHolderSet implements HolderSet<Item> {
-	private final TagKey<Item> tag;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
-	public LazyTagHolderSet(TagKey<Item> tag) {
-		this.tag = tag;
-	}
-
-	public TagKey<Item> getTag() {
-		return tag;
-	}
+public record LazyTagHolderSet(TagKey<Item> tag) implements HolderSet<Item> {
 
 	private Iterable<Holder<Item>> items() {
 		return BuiltInRegistries.ITEM.getTagOrEmpty(tag);
@@ -46,7 +36,7 @@ public class LazyTagHolderSet implements HolderSet<Item> {
 	@Override
 	public int size() {
 		int size = 0;
-		for(Holder<Item> ignored : items()) {
+		for (Holder<Item> ignored : items()) {
 			++size;
 		}
 		return size;
@@ -70,12 +60,12 @@ public class LazyTagHolderSet implements HolderSet<Item> {
 	@Override
 	public @NonNull Holder<Item> get(int index) {
 		int i = 0;
-		for(Holder<Item> holder : items()) {
-			if(i++ == index) {
+		for (Holder<Item> holder : items()) {
+			if (i++ == index) {
 				return holder;
 			}
 		}
-		throw new IndexOutOfBoundsException("Index "+index+" out of bounds for tag "+tag);
+		throw new IndexOutOfBoundsException("Index " + index + " out of bounds for tag " + tag);
 	}
 
 	@Override
@@ -100,6 +90,6 @@ public class LazyTagHolderSet implements HolderSet<Item> {
 
 	@Override
 	public String toString() {
-		return "LazyTagHolderSet["+tag+"]";
+		return "LazyTagHolderSet[" + tag + "]";
 	}
 }

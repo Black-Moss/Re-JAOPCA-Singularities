@@ -1,5 +1,7 @@
 package com.blackmoss.rejaopcasingularities.compat.avaritia;
 
+import com.blackmoss.rejaopcasingularities.CompoundSingularityType;
+import com.blackmoss.rejaopcasingularities.ReJAOPCASingularities;
 import committee.nova.mods.avaritia.Const;
 import committee.nova.mods.avaritia.api.init.event.RegisterRecipesEvent;
 import committee.nova.mods.avaritia.common.crafting.recipe.ShapelessTableCraftingRecipe;
@@ -20,7 +22,6 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
-import com.blackmoss.rejaopcasingularities.ReJAOPCASingularities;
 
 import java.util.Comparator;
 import java.util.List;
@@ -47,7 +48,7 @@ public final class EternalSingularityCompressionHandler {
             compoundCount = 0;
             return;
         }
-        int nameCount = ReJAOPCASingularities.COMPOUND_SINGULARITY_NAMES.size();
+        int nameCount = CompoundSingularityType.count();
         int wanted = (count + SINGULARITIES_PER_COMPOUND - 1) / SINGULARITIES_PER_COMPOUND;
         int compounds = Math.min(wanted, nameCount);
         if (wanted > nameCount) {
@@ -88,12 +89,8 @@ public final class EternalSingularityCompressionHandler {
 
     public static void onItemToolTip(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
-        String key = null;
-        if (stack.equals(ReJAOPCASingularities.compoundSingularity("egregious"))) {
-            key = "tooltip.rejaopcasingularities.egregious_singularity";
-        }
-        if (key != null) {
-            event.getToolTip().add(Component.translatable(key).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+        if (stack.is(ReJAOPCASingularities.compoundSingularity(CompoundSingularityType.EGREGIOUS).getItem())) {
+            event.getToolTip().add(Component.translatable(CompoundSingularityType.EGREGIOUS.getTooltipKey()).withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
         }
     }
 }

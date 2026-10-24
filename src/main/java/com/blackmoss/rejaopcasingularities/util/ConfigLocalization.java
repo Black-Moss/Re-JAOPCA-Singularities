@@ -1,7 +1,7 @@
 package com.blackmoss.rejaopcasingularities.util;
 
-import net.minecraft.locale.Language;
 import com.blackmoss.rejaopcasingularities.ReJAOPCASingularities;
+import net.minecraft.locale.Language;
 
 import java.util.Map;
 
