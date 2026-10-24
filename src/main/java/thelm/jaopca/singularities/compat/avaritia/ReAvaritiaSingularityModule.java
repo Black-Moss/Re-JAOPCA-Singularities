@@ -78,7 +78,8 @@ public class ReAvaritiaSingularityModule implements IModule {
             "tin",
             "uranium",
             "packed_ice",
-            "ice");
+            "ice",
+            "otherworld_wood");
 
     private Map<IMaterial, IDynamicSpecConfig> configs = Map.of();
     private Set<String> extraBlacklist = new TreeSet<>();
