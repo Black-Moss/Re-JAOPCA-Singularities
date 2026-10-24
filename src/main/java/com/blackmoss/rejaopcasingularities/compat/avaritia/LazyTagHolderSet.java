@@ -19,77 +19,77 @@ import java.util.stream.StreamSupport;
 
 public record LazyTagHolderSet(TagKey<Item> tag) implements HolderSet<Item> {
 
-	private Iterable<Holder<Item>> items() {
-		return BuiltInRegistries.ITEM.getTagOrEmpty(tag);
-	}
+    private Iterable<Holder<Item>> items() {
+        return BuiltInRegistries.ITEM.getTagOrEmpty(tag);
+    }
 
-	@Override
-	public @NonNull Iterator<Holder<Item>> iterator() {
-		return items().iterator();
-	}
+    @Override
+    public @NonNull Iterator<Holder<Item>> iterator() {
+        return items().iterator();
+    }
 
-	@Override
-	public @NonNull Stream<Holder<Item>> stream() {
-		return StreamSupport.stream(items().spliterator(), false);
-	}
+    @Override
+    public @NonNull Stream<Holder<Item>> stream() {
+        return StreamSupport.stream(items().spliterator(), false);
+    }
 
-	@Override
-	public int size() {
-		int size = 0;
-		for (Holder<Item> ignored : items()) {
-			++size;
-		}
-		return size;
-	}
+    @Override
+    public int size() {
+        int size = 0;
+        for (Holder<Item> ignored : items()) {
+            ++size;
+        }
+        return size;
+    }
 
-	@Override
-	public boolean isBound() {
-		return BuiltInRegistries.ITEM.get(tag).map(Named::isBound).orElse(false);
-	}
+    @Override
+    public boolean isBound() {
+        return BuiltInRegistries.ITEM.get(tag).map(Named::isBound).orElse(false);
+    }
 
-	@Override
-	public @NonNull Either<TagKey<Item>, List<Holder<Item>>> unwrap() {
-		return Either.left(tag);
-	}
+    @Override
+    public @NonNull Either<TagKey<Item>, List<Holder<Item>>> unwrap() {
+        return Either.left(tag);
+    }
 
-	@Override
-	public @NonNull Optional<Holder<Item>> getRandomElement(@NonNull RandomSource random) {
-		return Util.getRandomSafe(stream().toList(), random);
-	}
+    @Override
+    public @NonNull Optional<Holder<Item>> getRandomElement(@NonNull RandomSource random) {
+        return Util.getRandomSafe(stream().toList(), random);
+    }
 
-	@Override
-	public @NonNull Holder<Item> get(int index) {
-		int i = 0;
-		for (Holder<Item> holder : items()) {
-			if (i++ == index) {
-				return holder;
-			}
-		}
-		throw new IndexOutOfBoundsException("Index " + index + " out of bounds for tag " + tag);
-	}
+    @Override
+    public @NonNull Holder<Item> get(int index) {
+        int i = 0;
+        for (Holder<Item> holder : items()) {
+            if (i++ == index) {
+                return holder;
+            }
+        }
+        throw new IndexOutOfBoundsException("Index " + index + " out of bounds for tag " + tag);
+    }
 
-	@Override
-	public boolean contains(Holder<Item> value) {
-		return value.is(tag);
-	}
+    @Override
+    public boolean contains(Holder<Item> value) {
+        return value.is(tag);
+    }
 
-	@Override
-	public boolean canSerializeIn(@NonNull HolderOwner<Item> owner) {
-		return true;
-	}
+    @Override
+    public boolean canSerializeIn(@NonNull HolderOwner<Item> owner) {
+        return true;
+    }
 
-	@Override
-	public @NonNull Optional<TagKey<Item>> unwrapKey() {
-		return Optional.of(tag);
-	}
+    @Override
+    public @NonNull Optional<TagKey<Item>> unwrapKey() {
+        return Optional.of(tag);
+    }
 
-	@Override
-	public boolean isImmediatelyResolvable() {
-		return false;
-	}
+    @Override
+    public boolean isImmediatelyResolvable() {
+        return false;
+    }
 
-	@Override
-	public String toString() {
-		return "LazyTagHolderSet[" + tag + "]";
-	}
+    @Override
+    public @NonNull String toString() {
+        return "LazyTagHolderSet[" + tag + "]";
+    }
 }

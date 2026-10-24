@@ -20,7 +20,6 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.loading.FMLPaths;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import thelm.jaopca.api.JAOPCAApi;
 import thelm.jaopca.api.config.IDynamicSpecConfig;
 import thelm.jaopca.api.helpers.IMiscHelper;
 import thelm.jaopca.api.materials.IMaterial;
@@ -29,9 +28,6 @@ import thelm.jaopca.api.modules.IModule;
 import thelm.jaopca.api.modules.IModuleData;
 import thelm.jaopca.api.modules.JAOPCAModule;
 import thelm.jaopca.api.resources.IInMemoryResourcePack;
-import thelm.jaopca.singularities.ReJAOPCASingularities;
-import thelm.jaopca.singularities.compat.avaritia.recipes.SingularityCompressorRecipeSerializer;
-import thelm.jaopca.singularities.util.ConfigLocalization;
 import thelm.jaopca.utils.ApiImpl;
 import thelm.jaopca.utils.MiscHelper;
 
@@ -45,8 +41,6 @@ import java.util.stream.Collectors;
 
 @JAOPCAModule(modDependencies = "avaritia")
 public class ReAvaritiaSingularityModule implements IModule {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     public static final Set<String> ALWAYS_SKIPPED = Set.of(
             "aluminum",
             "amethyst",
@@ -87,11 +81,10 @@ public class ReAvaritiaSingularityModule implements IModule {
             "grains_of_prescience",
             "grains_of_the_end",
             "grains_of_pizeallity");
-
     public static final Set<String> FORCED = Set.of(
             "resin"
     );
-
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final Map<String, Identifier> INGREDIENTS = new TreeMap<>();
     private static boolean listenersRegistered;
     private final Set<IMaterial> singularityMaterials = new TreeSet<>();
