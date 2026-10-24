@@ -1,5 +1,21 @@
 ﻿{
   "values": [
-    "neovitae:demonite_trim_ingot"
+    "neovitae:demonite_trim_ingot",
+    "astral_dimension:astranite_ingot",
+    "astral_dimension:lucid_ingot",
+    "forbidden_arcanus:asterite_ingot",
+    "gedrite:gedrite_ingot",
+    "good_nights_sleep:spectrite_ingot",
+    "alexscaves:scarlet_neodymium_ingot",
+    "alexscaves:azure_neodymium_ingot",
+    "etg_engineering:crystallized_alloy_ingot",
+    "etg_engineering:resonant_alloy_ingot",
+    "etg_engineering:phase_alloy_ingot",
+    "etg_engineering:void_phase_alloy_ingot",
+    "rexray:xray_ingot",
+    "rexray:super_xray_ingot",
+    "rexray:super_ingot",
+    "rexray:ultra_ingot"
+
   ]
 }
