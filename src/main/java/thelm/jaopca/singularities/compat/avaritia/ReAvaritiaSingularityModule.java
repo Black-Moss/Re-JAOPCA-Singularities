@@ -10,6 +10,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.ARGB;
@@ -20,8 +21,6 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import thelm.jaopca.api.config.IDynamicSpecConfig;
 import thelm.jaopca.api.helpers.IMiscHelper;
 import thelm.jaopca.api.materials.IMaterial;
@@ -46,8 +45,6 @@ import java.util.stream.Collectors;
 
 @JAOPCAModule(modDependencies = "avaritia")
 public class ReAvaritiaSingularityModule implements IModule {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     public static final Set<String> ALWAYS_SKIPPED = Set.of(
             "aluminum",
             "amethyst",
@@ -96,7 +93,7 @@ public class ReAvaritiaSingularityModule implements IModule {
             "quartz_enriched_iron");
 
     private static final Map<String, Identifier> INGREDIENTS = new TreeMap<>();
-    private static boolean tagCheckRegistered;
+    private static boolean listenersRegistered;
 
     private Map<IMaterial, IDynamicSpecConfig> configs = Map.of();
     private Set<String> extraBlacklist = new TreeSet<>();
@@ -146,9 +143,10 @@ public class ReAvaritiaSingularityModule implements IModule {
         if (moduleConfig != null) {
             readModuleConfig(moduleConfig);
         }
-        if (!tagCheckRegistered) {
-            tagCheckRegistered = true;
+        if (!listenersRegistered) {
+            listenersRegistered = true;
             NeoForge.EVENT_BUS.addListener(ReAvaritiaSingularityModule::pruneEmptyIngredientSingularities);
+            NeoForge.EVENT_BUS.addListener(EternalSingularityCompressionHandler::onRegisterRecipes);
         }
         Set<IMaterial> materials = new TreeSet<>(moduleData.getMaterials());
         for (String forcedName : FORCED) {
@@ -156,7 +154,7 @@ public class ReAvaritiaSingularityModule implements IModule {
             if (forced != null) {
                 materials.add(forced);
             } else {
-                LOGGER.warn("Forced singularity material {} was not found in JAOPCA materials", forcedName);
+                ReJAOPCASingularities.LOGGER.warn("Forced singularity material {} was not found in JAOPCA materials", forcedName);
             }
         }
         int registered = 0;
@@ -165,7 +163,7 @@ public class ReAvaritiaSingularityModule implements IModule {
                 ++registered;
             }
         }
-        LOGGER.info("Registered {} Avaritia singularities for JAOPCA materials", registered);
+        ReJAOPCASingularities.LOGGER.info("Registered {} Avaritia singularities for JAOPCA materials", registered);
     }
 
     private static IMaterial findMaterial(String name) {
@@ -183,13 +181,13 @@ public class ReAvaritiaSingularityModule implements IModule {
         }
         Identifier materialTag = findIngredientTag(material);
         if (materialTag == null) {
-            LOGGER.warn("Skipping singularity for material {} as no item tag was found", material.getName());
+            ReJAOPCASingularities.LOGGER.warn("Skipping singularity for material {} as no item tag was found", material.getName());
             return false;
         }
         try {
             IDynamicSpecConfig config = configs.get(material);
             if (config == null) {
-                LOGGER.warn("No config available for material {}, skipping singularity", material.getName());
+                ReJAOPCASingularities.LOGGER.warn("No config available for material {}, skipping singularity", material.getName());
                 return false;
             }
             int count = config.getDefinedInt("avaritia_singularity.count", defaultCount, 1, Integer.MAX_VALUE,
@@ -202,13 +200,13 @@ public class ReAvaritiaSingularityModule implements IModule {
             Identifier recipeId = ReJAOPCASingularities.identifier(material.getName() + "_singularity");
             if (!ApiImpl.INSTANCE.registerRecipe(recipeId,
                     new SingularityCompressorRecipeSerializer(singularityId, materialTag, singularity))) {
-                LOGGER.warn("Compressor recipe {} was not injected (duplicate id or recipe blacklist)", recipeId);
+                ReJAOPCASingularities.LOGGER.warn("Compressor recipe {} was not injected (duplicate id or recipe blacklist)", recipeId);
             }
             INGREDIENTS.put(material.getName(), materialTag);
             singularityMaterials.add(material);
             return true;
         } catch (IllegalArgumentException | IllegalStateException e) {
-            LOGGER.error("Unable to register singularity for material {}", material.getName(), e);
+            ReJAOPCASingularities.LOGGER.error("Unable to register singularity for material {}", material.getName(), e);
             return false;
         }
     }
@@ -288,11 +286,11 @@ public class ReAvaritiaSingularityModule implements IModule {
                         resourcePack.putJson(PackType.CLIENT_RESOURCES, ReJAOPCASingularities.identifier("lang/" + language + ".json"), lang);
                     }
                 } catch (IOException | JsonParseException | UnsupportedOperationException e) {
-                    LOGGER.warn("Unable to read JAOPCA localization file {}", file, e);
+                    ReJAOPCASingularities.LOGGER.warn("Unable to read JAOPCA localization file {}", file, e);
                 }
             }
         } catch (IOException e) {
-            LOGGER.debug("Unable to read JAOPCA localization directory {}", langDir);
+            ReJAOPCASingularities.LOGGER.debug("Unable to read JAOPCA localization directory {}", langDir);
         }
     }
 
@@ -309,10 +307,10 @@ public class ReAvaritiaSingularityModule implements IModule {
             Identifier legacyTag = Identifier.fromNamespaceAndPath("forge", entry.getValue().getPath());
             int legacySize = tagSize(legacyTag);
             if (legacySize > 0) {
-                LOGGER.warn("Removing singularity {}: {} is empty but {} has {} items (old tag convention)",
+                ReJAOPCASingularities.LOGGER.warn("Removing singularity {}: {} is empty but {} has {} items (old tag convention)",
                         entry.getKey(), entry.getValue(), legacyTag, legacySize);
             } else {
-                LOGGER.warn("Removing singularity {} as its ingredient tag {} is empty", entry.getKey(), entry.getValue());
+                ReJAOPCASingularities.LOGGER.warn("Removing singularity {} as its ingredient tag {} is empty", entry.getKey(), entry.getValue());
             }
         }
         if (removed.isEmpty()) {
@@ -321,7 +319,9 @@ public class ReAvaritiaSingularityModule implements IModule {
         removed.forEach(runSingularities::remove);
         listener.setRunSingularities(runSingularities);
         listener.finalizeScriptTransaction();
-        LOGGER.info("Removed {} singularities with empty ingredient tags", removed.size());
+        ReJAOPCASingularities.LOGGER.info("Removed {} singularities with empty ingredient tags", removed.size());
+        MinecraftServer server = event.getServer();
+        server.execute(() -> server.reloadResources(server.getPackRepository().getSelectedIds()));
     }
 
     private static int tagSize(Identifier tagLocation) {
