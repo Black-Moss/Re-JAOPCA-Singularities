@@ -106,9 +106,6 @@ dependencies {
     compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}"
     compileOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
     runtimeOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
-
-    // Jade
-    implementation "maven.modrinth:jade:${jade_version}"
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
