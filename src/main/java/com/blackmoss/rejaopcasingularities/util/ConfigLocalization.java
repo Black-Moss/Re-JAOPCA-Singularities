@@ -23,7 +23,7 @@ public final class ConfigLocalization {
     }
 
     private static String key(String name) {
-        return ReJAOPCASingularities.MODID + "configuration." + name;
+        return ReJAOPCASingularities.MODID + ".configuration." + name;
     }
 
     public static String get(String key) {
