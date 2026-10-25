@@ -1,4 +1,6 @@
-license = "${mod_license}"
+modLoader="javafml"
+loaderVersion="${loader_version_range}"
+license="${mod_license}"
 
 [[mods]]
 modId = "${mod_id}"
@@ -25,7 +27,7 @@ side = "BOTH"
 [[dependencies.${ mod_id }]]
 modId = "jaopca"
 type = "required"
-versionRange = "[6.0.2.2,)"
+versionRange = "[5.0.14.23,)"
 ordering = "AFTER"
 side = "BOTH"
 
