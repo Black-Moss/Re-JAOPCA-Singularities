@@ -38,20 +38,13 @@ public final class EternalSingularityCompressionHandler {
     public static final ResourceLocation ETERNAL_SINGULARITY_RECIPE_ID =
             ResourceLocation.fromNamespaceAndPath("avaritia", "eternal_singularity");
 
-    /**
-     * common setup 收集到的候选材料。此时物品标签还没绑定，不能判断标签里有没有物品，
-     * 真正注册奇点要等 {@code ServerStartedEvent}（标签已绑定、{@link #USABLE} 已经算好）。
-     */
     public static final Map<String, Candidate> CANDIDATES = new TreeMap<>();
 
-    /** 配方加载阶段确认过输入标签里有物品的材料 */
     public static final TreeSet<String> USABLE = new TreeSet<>();
 
-    /** 一个候选材料在注册奇点前就确定下来的数据 */
     public record Candidate(ResourceLocation tag, int count, int timeCost, int overlayColor, int underlayColor, String displayName) {
     }
 
-    /** 1.21.1 的 RegisterRecipesEvent 只能添加配方，移除永恒奇点原配方只能直接改它的列表 */
     private static final Field RECIPES_FIELD;
 
     static {
@@ -65,14 +58,12 @@ public final class EternalSingularityCompressionHandler {
         RECIPES_FIELD = field;
     }
 
-    /** 本次加载需要的复合奇点数量，配方生成时写入，创造模式标签页读取 */
     private static volatile int compoundCount;
 
     private EternalSingularityCompressionHandler() {
     }
 
     public static void onRegisterRecipes(RegisterRecipesEvent event) {
-        // 1.21.1 的配方加载发生在物品标签绑定之后，这里才能确认哪些材料的标签里真的有物品
         USABLE.clear();
         for (Map.Entry<String, Candidate> entry : CANDIDATES.entrySet()) {
             if (tagSize(entry.getValue().tag()) > 0) {
@@ -134,11 +125,7 @@ public final class EternalSingularityCompressionHandler {
                 new ShapelessTableCraftingRecipe(eternalInputs, new ItemStack(ModItems.eternal_singularity.get()), 4)));
     }
 
-    /**
-     * 用已绑定的标签给可用材料生成压缩机配方。此时奇点还没注册，这里用候选数据临时构造奇点来取物品栈。
-     */
     private static void injectCompressorRecipes(RegisterRecipesEvent event) {
-        // 数据包重载时主动生成的奇点已经能让无尽贪婪自动生成同 id 配方，先清掉再补自己的，避免重复 id
         removeRecipes(event, holder -> isOurCompressorRecipe(holder.id()));
         int added = 0;
         for (String name : USABLE) {
@@ -153,7 +140,6 @@ public final class EternalSingularityCompressionHandler {
         ReJAOPCASingularities.LOGGER.info("Injected {} compressor recipes for JAOPCA singularities", added);
     }
 
-    /** 用候选数据构造一个临时奇点，只为取 id 和数量，不注册 */
     private static Singularity candidateSingularity(String name, Candidate candidate) {
         Singularity singularity = new Singularity(ReJAOPCASingularities.id(name));
         singularity.setCount(candidate.count());
@@ -192,9 +178,6 @@ public final class EternalSingularityCompressionHandler {
         return size;
     }
 
-    /**
-     * 把这次加载用到的复合奇点加进无尽贪婪的奇点创造模式标签页。
-     */
     public static void onBuildCreativeModeTabContents(BuildCreativeModeTabContentsEvent event) {
         if (!event.getTabKey().equals(ModCreativeModeTabs.SINGULARITY_CREATIVE_TAB.getKey())) {
             return;
