@@ -89,7 +89,7 @@ public final class EternalSingularityCompressionHandler {
 
     public static void onItemToolTip(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
-        if (stack.is(ReJAOPCASingularities.compoundSingularity(CompoundSingularityType.EGREGIOUS).getItem())) {
+        if (stack.is(ReJAOPCASingularities.compoundSingularity(CompoundSingularityType.ROBOTIC).getItem())) {
             event.getToolTip().add(Component.translatable(CompoundSingularityType.EGREGIOUS.getTooltipKey()).withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
         }
     }
