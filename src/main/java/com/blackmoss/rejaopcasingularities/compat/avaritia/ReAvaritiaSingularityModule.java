@@ -1,23 +1,7 @@
 package com.blackmoss.rejaopcasingularities.compat.avaritia;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.Locale;
-import java.util.Map;
-import java.util.OptionalInt;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import com.blackmoss.rejaopcasingularities.ReJAOPCASingularities;
+import com.blackmoss.rejaopcasingularities.util.ConfigLocalization;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
@@ -45,13 +29,17 @@ import thelm.jaopca.api.modules.JAOPCAModule;
 import thelm.jaopca.api.resources.IInMemoryResourcePack;
 import thelm.jaopca.utils.ApiImpl;
 import thelm.jaopca.utils.MiscHelper;
-import com.blackmoss.rejaopcasingularities.ReJAOPCASingularities;
-import com.blackmoss.rejaopcasingularities.util.ConfigLocalization;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @JAOPCAModule(modDependencies = "avaritia")
 public class ReAvaritiaSingularityModule implements IModule {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     public static final Set<String> ALWAYS_SKIPPED = Set.of(
             "aluminum",
             "amethyst",
@@ -142,12 +130,14 @@ public class ReAvaritiaSingularityModule implements IModule {
             NeoForge.EVENT_BUS.addListener(ReAvaritiaSingularityModule::registerSingularities);
             NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, EternalSingularityCompressionHandler::onRegisterRecipes);
             NeoForge.EVENT_BUS.addListener(EternalSingularityCompressionHandler::onItemToolTip);
+            NeoForge.EVENT_BUS.addListener(MaterialColorBridge::onMaterialColor);
+            NeoForge.EVENT_BUS.addListener(MaterialColorBridge::onSingularitiesReloaded);
         }
         Set<IMaterial> materials = new TreeSet<>(moduleData.getMaterials());
         for (IMaterial material : materials) {
             collectCandidate(material);
         }
-        LOGGER.info("Collected {} candidate materials for Avaritia singularities",
+        ReJAOPCASingularities.LOGGER.info("Collected {} candidate materials for Avaritia singularities",
                 EternalSingularityCompressionHandler.CANDIDATES.size());
     }
 
@@ -157,12 +147,12 @@ public class ReAvaritiaSingularityModule implements IModule {
         }
         ResourceLocation materialTag = findIngredientTag(material);
         if (materialTag == null) {
-            LOGGER.warn("Skipping singularity for material {} as no item tag was found", material.getName());
+            ReJAOPCASingularities.LOGGER.warn("Skipping singularity for material {} as no item tag was found", material.getName());
             return;
         }
         IDynamicSpecConfig config = configs.get(material);
         if (config == null) {
-            LOGGER.warn("No config available for material {}, skipping singularity", material.getName());
+            ReJAOPCASingularities.LOGGER.warn("No config available for material {}, skipping singularity", material.getName());
             return;
         }
         int count = config.getDefinedInt("avaritia_singularity.count", defaultCount, 1, Integer.MAX_VALUE,
@@ -226,7 +216,7 @@ public class ReAvaritiaSingularityModule implements IModule {
             return;
         }
         listener.finalizeScriptTransaction();
-        LOGGER.info("Registered {} Avaritia singularities from JAOPCA materials", registered);
+        ReJAOPCASingularities.LOGGER.info("Registered {} Avaritia singularities from JAOPCA materials", registered);
     }
 
     @Override
@@ -263,11 +253,11 @@ public class ReAvaritiaSingularityModule implements IModule {
                         resourcePack.putJson(PackType.CLIENT_RESOURCES, ReJAOPCASingularities.id("lang/" + language + ".json"), lang);
                     }
                 } catch (IOException | JsonParseException | UnsupportedOperationException e) {
-                    LOGGER.warn("Unable to read JAOPCA localization file {}", file, e);
+                    ReJAOPCASingularities.LOGGER.warn("Unable to read JAOPCA localization file {}", file, e);
                 }
             }
         } catch (IOException e) {
-            LOGGER.debug("Unable to read JAOPCA localization directory {}", langDir);
+            ReJAOPCASingularities.LOGGER.debug("Unable to read JAOPCA localization directory {}", langDir);
         }
     }
 
