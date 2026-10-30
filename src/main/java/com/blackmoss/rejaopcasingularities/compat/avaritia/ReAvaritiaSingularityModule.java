@@ -240,6 +240,8 @@ public class ReAvaritiaSingularityModule implements IModule {
             NeoForge.EVENT_BUS.addListener(ReAvaritiaSingularityModule::pruneEmptyIngredientSingularities);
             NeoForge.EVENT_BUS.addListener(EternalSingularityCompressionHandler::onRegisterRecipes);
             NeoForge.EVENT_BUS.addListener(EternalSingularityCompressionHandler::onItemToolTip);
+            NeoForge.EVENT_BUS.addListener(MaterialColorBridge::onMaterialColor);
+            NeoForge.EVENT_BUS.addListener(MaterialColorBridge::onSingularitiesReloaded);
         }
         Set<IMaterial> materials = new TreeSet<>(moduleData.getMaterials());
         int registered = 0;
