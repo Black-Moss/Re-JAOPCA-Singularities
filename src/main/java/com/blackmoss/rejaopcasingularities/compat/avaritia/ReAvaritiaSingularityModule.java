@@ -24,8 +24,6 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import thelm.jaopca.api.config.IDynamicSpecConfig;
 import thelm.jaopca.api.helpers.IMiscHelper;
 import thelm.jaopca.api.materials.IMaterial;
@@ -87,10 +85,7 @@ public class ReAvaritiaSingularityModule implements IModule {
             "grains_of_prescience",
             "grains_of_the_end",
             "grains_of_pizeallity");
-    public static final Set<String> FORCED = Set.of(
-            "resin"
-    );
-    private static final Logger LOGGER = LogManager.getLogger();
+
     private static final Map<String, Identifier> INGREDIENTS = new TreeMap<>();
     private static boolean listenersRegistered;
     private final Set<IMaterial> singularityMaterials = new TreeSet<>();
@@ -100,35 +95,11 @@ public class ReAvaritiaSingularityModule implements IModule {
     private int defaultCount = 1000;
     private int defaultTimeCost = -1;
 
-    private static IMaterial findMaterial(String name) {
-        for (IMaterial material : ApiImpl.INSTANCE.getMaterials()) {
-            if (material.getName().equals(name) || material.getAlternativeNames().contains(name)) {
-                return material;
-            }
-        }
-        return null;
-    }
-
     private static Identifier findIngredientTag(IMaterial material) {
         Set<Identifier> itemTags = ApiImpl.INSTANCE.getItemTags();
         IMiscHelper miscHelper = MiscHelper.INSTANCE;
         Identifier tag = miscHelper.getTagLocation(material.getType().getFormName(), material.getName());
-        if (itemTags.contains(tag)) {
-            return tag;
-        }
-        if (isForced(material)) {
-            for (String form : List.of("ingots", "gems", "crystals", "dusts")) {
-                Identifier alternative = miscHelper.getTagLocation(form, material.getName());
-                if (itemTags.contains(alternative)) {
-                    return alternative;
-                }
-            }
-        }
-        return null;
-    }
-
-    private static boolean isForced(IMaterial material) {
-        return matches(material, FORCED);
+        return itemTags.contains(tag) ? tag : null;
     }
 
     private static boolean matches(IMaterial material, Set<String> names) {
@@ -271,14 +242,6 @@ public class ReAvaritiaSingularityModule implements IModule {
             NeoForge.EVENT_BUS.addListener(EternalSingularityCompressionHandler::onItemToolTip);
         }
         Set<IMaterial> materials = new TreeSet<>(moduleData.getMaterials());
-        for (String forcedName : FORCED) {
-            IMaterial forced = findMaterial(forcedName);
-            if (forced != null) {
-                materials.add(forced);
-            } else {
-                ReJAOPCASingularities.LOGGER.warn("Forced singularity material {} was not found in JAOPCA materials", forcedName);
-            }
-        }
         int registered = 0;
         for (IMaterial material : materials) {
             if (registerSingularity(material)) {
@@ -325,10 +288,7 @@ public class ReAvaritiaSingularityModule implements IModule {
     }
 
     private boolean isSkipped(IMaterial material) {
-        if (matches(material, extraBlacklist)) {
-            return true;
-        }
-        return !isForced(material) && matches(material, ALWAYS_SKIPPED);
+        return matches(material, extraBlacklist) || matches(material, ALWAYS_SKIPPED);
     }
 
     @Override

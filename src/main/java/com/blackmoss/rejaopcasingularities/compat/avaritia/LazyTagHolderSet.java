@@ -18,7 +18,6 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public record LazyTagHolderSet(TagKey<Item> tag) implements HolderSet<Item> {
-
     private Iterable<Holder<Item>> items() {
         return BuiltInRegistries.ITEM.getTagOrEmpty(tag);
     }
