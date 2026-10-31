@@ -12,7 +12,7 @@ It includes the composite singularity feature from [Eternal Singularity](https:/
 
 Each composite singularity is equivalent to a collection of 81 original singularities.
 
-Only by synthesizing all composite singularities together at the End can an Eternal Singularity be created.
+Only by synthesizing all composite singularities together at the Extreme Crafting Table can an Eternal Singularity be created.
 
 Inspired by [AOBD Singularities](https://www.curseforge.com/minecraft/mc-mods/aobd-singularities) by RCXCrafter.
 
