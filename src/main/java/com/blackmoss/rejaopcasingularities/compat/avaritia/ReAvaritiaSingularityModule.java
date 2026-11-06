@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 
 @JAOPCAModule(modDependencies = "avaritia")
 public class ReAvaritiaSingularityModule implements IModule {
-    public static final Set<String> ALWAYS_SKIPPED = Set.of(
+    public static final Set<String> BLACKLIST = Set.of(
             "aluminum",
             "amethyst",
             "amethyst_shard",
@@ -181,7 +181,7 @@ public class ReAvaritiaSingularityModule implements IModule {
 
     @Override
     public Set<String> getDefaultMaterialBlacklist() {
-        return ALWAYS_SKIPPED;
+        return BLACKLIST;
     }
 
     @Override
@@ -250,7 +250,7 @@ public class ReAvaritiaSingularityModule implements IModule {
     }
 
     private boolean isSkipped(IMaterial material) {
-        return matches(material, extraBlacklist) || matches(material, ALWAYS_SKIPPED);
+        return matches(material, extraBlacklist) || matches(material, BLACKLIST);
     }
 
     @Override
