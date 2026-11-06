@@ -7,8 +7,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
 import org.apache.logging.log4j.LogManager;
@@ -32,7 +32,9 @@ public class ReJAOPCASingularities {
                                     .rarity(Rarity.EPIC))))
                     .toList();
 
-    public ReJAOPCASingularities(IEventBus modEventBus, ModContainer modContainer) {
+    public ReJAOPCASingularities() {
+        //noinspection removal
+        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         ITEMS.register(modEventBus);
         modEventBus.addListener(EternalSingularityCompressionHandler::onBuildCreativeModeTabContents);
     }

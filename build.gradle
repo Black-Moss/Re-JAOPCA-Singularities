@@ -34,6 +34,8 @@ minecraft {
 
         client {
             property 'forge.enabledGameTestNamespaces', mod_id
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
         }
 
         server {
@@ -85,16 +87,16 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
     // JAOPCA
-    implementation "maven.modrinth:jaopca:${jaopca_version}"
+    implementation fg.deobf("maven.modrinth:jaopca:${jaopca_version}")
 
     // Re:Avaritia
-    implementation "maven.modrinth:re-avaritia:${re_avaritia_version}"
+    implementation fg.deobf("maven.modrinth:re-avaritia:${re_avaritia_version}")
 
     // JEI
-    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
-    compileOnly "mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}"
-    compileOnly "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
-    runtimeOnly "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
+    compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")
+    compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}")
+    compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
+    runtimeOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
 }
 
 tasks.named('processResources', ProcessResources).configure {
