@@ -36,9 +36,9 @@ public final class EternalSingularityCompressionHandler {
     public static final ResourceLocation ETERNAL_SINGULARITY_RECIPE_ID =
             new ResourceLocation("avaritia", "eternal_singularity");
 
-    public static final Map<String, Candidate> CANDIDATES = new TreeMap<>();
+    public static final Map<String, Candidate> CANDIDATES = new java.util.concurrent.ConcurrentSkipListMap<>();
 
-    public static final TreeSet<String> USABLE = new TreeSet<>();
+    public static final java.util.Set<String> USABLE = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private static final Field RECIPES_FIELD;
     private static volatile int compoundCount;
 
