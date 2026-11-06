@@ -82,6 +82,8 @@ repositories {
 }
 
 dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
     // JAOPCA
     implementation "maven.modrinth:jaopca:${jaopca_version}"
 
@@ -150,5 +152,5 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 tasks.named('jar', Jar).configure {
-    archiveFileName = "${mod_id}-${mod_version}-NeoForge-${minecraft_version}.jar"
+    archiveFileName = "${mod_id}-${mod_version}-Forge-${minecraft_version}.jar"
 }

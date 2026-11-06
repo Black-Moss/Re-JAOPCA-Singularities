@@ -29,7 +29,7 @@ side = "BOTH"
 [[dependencies.${ mod_id }]]
 modId = "jaopca"
 mandatory = true
-versionRange = "[5.0.14.23,)"
+versionRange = "[4.4.18.34,)"
 ordering = "AFTER"
 side = "BOTH"
 
