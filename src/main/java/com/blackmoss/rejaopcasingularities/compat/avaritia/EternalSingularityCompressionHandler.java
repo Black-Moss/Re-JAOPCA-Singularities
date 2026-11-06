@@ -93,6 +93,9 @@ public final class EternalSingularityCompressionHandler {
             singularities.add(candidateSingularity(name, CANDIDATES.get(name)));
         }
         for (Singularity singularity : SingularityReloadListener.INSTANCE.getAllSingularities().values()) {
+            if (singularity.getRegistryName().getNamespace().equals(ReJAOPCASingularities.MODID)) {
+                continue;
+            }
             Ingredient ingredient = singularity.getIngredient();
             if (ingredient != Ingredient.EMPTY && !ingredient.isEmpty()) {
                 singularities.add(singularity);
