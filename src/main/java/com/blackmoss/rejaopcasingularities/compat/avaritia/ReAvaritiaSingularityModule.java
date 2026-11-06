@@ -85,6 +85,87 @@ public class ReAvaritiaSingularityModule implements IModule {
     private int defaultCount = 1000;
     private int defaultTimeCost = -1;
 
+    private static ResourceLocation findIngredientTag(IMaterial material) {
+        Set<ResourceLocation> itemTags = ApiImpl.INSTANCE.getItemTags();
+        IMiscHelper miscHelper = MiscHelper.INSTANCE;
+        ResourceLocation tag = miscHelper.getTagLocation(material.getType().getFormName(), material.getName());
+        return itemTags.contains(tag) ? tag : null;
+    }
+
+    private static boolean matches(IMaterial material, Set<String> names) {
+        if (names.contains(material.getName())) {
+            return true;
+        }
+        for (String alternativeName : material.getAlternativeNames()) {
+            if (names.contains(alternativeName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void registerSingularities(ServerStartedEvent event) {
+        SingularityReloadListener listener = SingularityReloadListener.INSTANCE;
+        int registered = 0;
+        for (String name : EternalSingularityCompressionHandler.USABLE) {
+            EternalSingularityCompressionHandler.Candidate candidate =
+                    EternalSingularityCompressionHandler.CANDIDATES.get(name);
+            if (candidate == null) {
+                continue;
+            }
+            Ingredient ingredient = Ingredient.of(TagKey.create(Registries.ITEM, candidate.tag()));
+            if (ingredient.isEmpty()) {
+                continue;
+            }
+            Singularity singularity = new Singularity(ReJAOPCASingularities.identifier(name))
+                    .setDisplayName(candidate.displayName())
+                    .setColors(candidate.overlayColor(), candidate.underlayColor())
+                    .setIngredient(ingredient)
+                    .setCount(candidate.count());
+            if (candidate.timeCost() > 0) {
+                singularity.setTimeCost(candidate.timeCost());
+            }
+            listener.registerSingularity(singularity);
+            ++registered;
+        }
+        if (registered == 0) {
+            return;
+        }
+        listener.finalizeScriptTransaction();
+        ReJAOPCASingularities.LOGGER.info("Registered {} Avaritia singularities from JAOPCA materials", registered);
+    }
+
+    private static int[] getColors(IMaterial material, IDynamicSpecConfig config) {
+        OptionalInt configuredColor = config.getOptionalInt("general.color");
+        int color = configuredColor.isPresent()
+                ? configuredColor.getAsInt() & 0xFFFFFF
+                : fingerprintColor(material.getName());
+        return new int[]{color, scaleRgb(color)};
+    }
+
+    private static int scaleRgb(int color) {
+        int red = Math.min(255, (int) ((color >> 16 & 0xFF) * (float) 0.45));
+        int green = Math.min(255, (int) ((color >> 8 & 0xFF) * (float) 0.45));
+        int blue = Math.min(255, (int) ((color & 0xFF) * (float) 0.45));
+        return red << 16 | green << 8 | blue;
+    }
+
+    private static int fingerprintColor(String materialName) {
+        float hue = Math.floorMod(materialName.hashCode(), 360) / 360F;
+        return Mth.hsvToRgb(hue, 0.45F, 0.9F);
+    }
+
+    private static String getTranslationKey(IMaterial material) {
+        return "singularity." + ReJAOPCASingularities.MODID + "." + material.getName();
+    }
+
+    private static String splitAndCapitalize(String underscore) {
+        return Arrays.stream(underscore.split("_")).
+                filter(s -> !s.isEmpty()).
+                map(s -> s.substring(0, 1).toUpperCase(Locale.ROOT) + s.substring(1)).
+                collect(Collectors.joining(" "));
+    }
+
     @Override
     public String getName() {
         return "avaritia_singularity";
@@ -165,58 +246,8 @@ public class ReAvaritiaSingularityModule implements IModule {
                         getTranslationKey(material)));
     }
 
-    private static ResourceLocation findIngredientTag(IMaterial material) {
-        Set<ResourceLocation> itemTags = ApiImpl.INSTANCE.getItemTags();
-        IMiscHelper miscHelper = MiscHelper.INSTANCE;
-        ResourceLocation tag = miscHelper.getTagLocation(material.getType().getFormName(), material.getName());
-        return itemTags.contains(tag) ? tag : null;
-    }
-
     private boolean isSkipped(IMaterial material) {
         return matches(material, extraBlacklist) || matches(material, ALWAYS_SKIPPED);
-    }
-
-    private static boolean matches(IMaterial material, Set<String> names) {
-        if (names.contains(material.getName())) {
-            return true;
-        }
-        for (String alternativeName : material.getAlternativeNames()) {
-            if (names.contains(alternativeName)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static void registerSingularities(ServerStartedEvent event) {
-        SingularityReloadListener listener = SingularityReloadListener.INSTANCE;
-        int registered = 0;
-        for (String name : EternalSingularityCompressionHandler.USABLE) {
-            EternalSingularityCompressionHandler.Candidate candidate =
-                    EternalSingularityCompressionHandler.CANDIDATES.get(name);
-            if (candidate == null) {
-                continue;
-            }
-            Ingredient ingredient = Ingredient.of(TagKey.create(Registries.ITEM, candidate.tag()));
-            if (ingredient.isEmpty()) {
-                continue;
-            }
-            Singularity singularity = new Singularity(ReJAOPCASingularities.identifier(name))
-                    .setDisplayName(candidate.displayName())
-                    .setColors(candidate.overlayColor(), candidate.underlayColor())
-                    .setIngredient(ingredient)
-                    .setCount(candidate.count());
-            if (candidate.timeCost() > 0) {
-                singularity.setTimeCost(candidate.timeCost());
-            }
-            listener.registerSingularity(singularity);
-            ++registered;
-        }
-        if (registered == 0) {
-            return;
-        }
-        listener.finalizeScriptTransaction();
-        ReJAOPCASingularities.LOGGER.info("Registered {} Avaritia singularities from JAOPCA materials", registered);
     }
 
     @Override
@@ -256,36 +287,5 @@ public class ReAvaritiaSingularityModule implements IModule {
         } catch (IOException e) {
             ReJAOPCASingularities.LOGGER.debug("Unable to read JAOPCA localization directory {}", langDir);
         }
-    }
-
-    private static int[] getColors(IMaterial material, IDynamicSpecConfig config) {
-        OptionalInt configuredColor = config.getOptionalInt("general.color");
-        int color = configuredColor.isPresent()
-                ? configuredColor.getAsInt() & 0xFFFFFF
-                : fingerprintColor(material.getName());
-        return new int[]{color, scaleRgb(color)};
-    }
-
-    private static int scaleRgb(int color) {
-        int red = Math.min(255, (int) ((color >> 16 & 0xFF) * (float) 0.45));
-        int green = Math.min(255, (int) ((color >> 8 & 0xFF) * (float) 0.45));
-        int blue = Math.min(255, (int) ((color & 0xFF) * (float) 0.45));
-        return red << 16 | green << 8 | blue;
-    }
-
-    private static int fingerprintColor(String materialName) {
-        float hue = Math.floorMod(materialName.hashCode(), 360) / 360F;
-        return Mth.hsvToRgb(hue, 0.45F, 0.9F);
-    }
-
-    private static String getTranslationKey(IMaterial material) {
-        return "singularity." + ReJAOPCASingularities.MODID + "." + material.getName();
-    }
-
-    private static String splitAndCapitalize(String underscore) {
-        return Arrays.stream(underscore.split("_")).
-                filter(s -> !s.isEmpty()).
-                map(s -> s.substring(0, 1).toUpperCase(Locale.ROOT) + s.substring(1)).
-                collect(Collectors.joining(" "));
     }
 }

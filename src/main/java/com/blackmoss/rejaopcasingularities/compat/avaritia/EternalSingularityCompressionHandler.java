@@ -1,13 +1,9 @@
 package com.blackmoss.rejaopcasingularities.compat.avaritia;
 
-import java.lang.reflect.Field;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
-import committee.nova.mods.avaritia.Const;
+import com.blackmoss.rejaopcasingularities.CompoundSingularityType;
+import com.blackmoss.rejaopcasingularities.ReJAOPCASingularities;
+import com.blackmoss.rejaopcasingularities.compat.avaritia.recipes.CompoundCompressionRecipe;
+import com.blackmoss.rejaopcasingularities.util.NbtIngredient;
 import committee.nova.mods.avaritia.api.init.event.RegisterRecipesEvent;
 import committee.nova.mods.avaritia.common.crafting.recipe.CompressorRecipe;
 import committee.nova.mods.avaritia.common.crafting.recipe.ShapelessTableCraftingRecipe;
@@ -25,11 +21,13 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.RecipeHolder;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
-import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
-import com.blackmoss.rejaopcasingularities.CompoundSingularityType;
-import com.blackmoss.rejaopcasingularities.ReJAOPCASingularities;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.function.Predicate;
 
 public final class EternalSingularityCompressionHandler {
     public static final int MAX_SINGULARITIES = 81;
@@ -41,11 +39,8 @@ public final class EternalSingularityCompressionHandler {
     public static final Map<String, Candidate> CANDIDATES = new TreeMap<>();
 
     public static final TreeSet<String> USABLE = new TreeSet<>();
-
-    public record Candidate(ResourceLocation tag, int count, int timeCost, int overlayColor, int underlayColor, String displayName) {
-    }
-
     private static final Field RECIPES_FIELD;
+    private static volatile int compoundCount;
 
     static {
         Field field = null;
@@ -57,8 +52,6 @@ public final class EternalSingularityCompressionHandler {
         }
         RECIPES_FIELD = field;
     }
-
-    private static volatile int compoundCount;
 
     private EternalSingularityCompressionHandler() {
     }
@@ -78,7 +71,7 @@ public final class EternalSingularityCompressionHandler {
 
         injectCompressorRecipes(event);
 
-        List<Singularity> singularities = new java.util.ArrayList<>();
+        List<Singularity> singularities = new ArrayList<>();
         for (String name : USABLE) {
             singularities.add(candidateSingularity(name, CANDIDATES.get(name)));
         }
@@ -106,42 +99,47 @@ public final class EternalSingularityCompressionHandler {
                 count, compounds);
         compoundCount = compounds;
 
-        removeRecipes(event, holder -> holder.id().equals(ETERNAL_SINGULARITY_RECIPE_ID));
+        removeRecipes(event, recipe -> recipe.getId().equals(ETERNAL_SINGULARITY_RECIPE_ID));
         NonNullList<Ingredient> eternalInputs = NonNullList.create();
         for (int compound = 0; compound < compounds; compound++) {
             int from = compound * SINGULARITIES_PER_COMPOUND;
             int to = Math.min(from + SINGULARITIES_PER_COMPOUND, count);
             NonNullList<Ingredient> inputs = NonNullList.create();
+            List<ItemStack> expected = new ArrayList<>();
             for (Singularity singularity : singularities.subList(from, to)) {
-                inputs.add(Const.getStackIngredient(SingularityUtils.getItemForSingularity(singularity)));
+                ItemStack item = SingularityUtils.getItemForSingularity(singularity);
+                inputs.add(new NbtIngredient(item));
+                expected.add(item);
             }
             ItemStack compressed = ReJAOPCASingularities.compoundSingularity(compound);
-            event.addRecipe(new RecipeHolder<>(
-                    ReJAOPCASingularities.id("compressed_singularity_" + compound),
-                    new ShapelessTableCraftingRecipe(inputs, compressed, 4)));
-            eternalInputs.add(Const.getStackIngredient(compressed));
+            event.addRecipe(new CompoundCompressionRecipe(
+                    ReJAOPCASingularities.identifier("compressed_singularity_" + compound), inputs, compressed, expected));
+            eternalInputs.add(Ingredient.of(compressed));
         }
-        event.addRecipe(new RecipeHolder<>(ETERNAL_SINGULARITY_RECIPE_ID,
-                new ShapelessTableCraftingRecipe(eternalInputs, new ItemStack(ModItems.eternal_singularity.get()), 4)));
+        event.addRecipe(new ShapelessTableCraftingRecipe(ETERNAL_SINGULARITY_RECIPE_ID, eternalInputs,
+                new ItemStack(ModItems.eternal_singularity.get()), 4));
     }
 
     private static void injectCompressorRecipes(RegisterRecipesEvent event) {
-        removeRecipes(event, holder -> isOurCompressorRecipe(holder.id()));
+        removeRecipes(event, recipe -> isOurCompressorRecipe(recipe.getId()));
         int added = 0;
         for (String name : USABLE) {
             Candidate candidate = CANDIDATES.get(name);
             Ingredient ingredient = Ingredient.of(TagKey.create(Registries.ITEM, candidate.tag()));
             Singularity singularity = candidateSingularity(name, candidate);
-            event.addRecipe(new RecipeHolder<>(ReJAOPCASingularities.id(name + "_singularity"),
-                    new CompressorRecipe(ingredient, SingularityUtils.getItemForSingularity(singularity),
-                            candidate.count(), candidate.timeCost())));
+            event.addRecipe(new CompressorRecipe(
+                    ReJAOPCASingularities.identifier(name + "_singularity"),
+                    ingredient,
+                    SingularityUtils.getItemForSingularity(singularity),
+                    candidate.count(),
+                    candidate.timeCost()));
             ++added;
         }
         ReJAOPCASingularities.LOGGER.info("Injected {} compressor recipes for JAOPCA singularities", added);
     }
 
     private static Singularity candidateSingularity(String name, Candidate candidate) {
-        Singularity singularity = new Singularity(ReJAOPCASingularities.id(name));
+        Singularity singularity = new Singularity(ReJAOPCASingularities.identifier(name));
         singularity.setCount(candidate.count());
         if (candidate.timeCost() > 0) {
             singularity.setTimeCost(candidate.timeCost());
@@ -154,16 +152,17 @@ public final class EternalSingularityCompressionHandler {
             return false;
         }
         String path = id.getPath();
-        return path.endsWith("_singularity") && CANDIDATES.containsKey(path.substring(0, path.length() - "_singularity".length()));
+        return path.endsWith("_singularity")
+                && CANDIDATES.containsKey(path.substring(0, path.length() - "_singularity".length()));
     }
 
-    private static void removeRecipes(RegisterRecipesEvent event, java.util.function.Predicate<RecipeHolder<?>> predicate) {
+    private static void removeRecipes(RegisterRecipesEvent event, Predicate<Recipe<?>> predicate) {
         if (RECIPES_FIELD == null) {
             return;
         }
         try {
             @SuppressWarnings("unchecked")
-            List<RecipeHolder<?>> recipes = (List<RecipeHolder<?>>) RECIPES_FIELD.get(event);
+            List<Recipe<?>> recipes = (List<Recipe<?>>) RECIPES_FIELD.get(event);
             recipes.removeIf(predicate);
         } catch (IllegalAccessException e) {
             ReJAOPCASingularities.LOGGER.error("Unable to modify the recipe list", e);
@@ -179,7 +178,7 @@ public final class EternalSingularityCompressionHandler {
     }
 
     public static void onBuildCreativeModeTabContents(BuildCreativeModeTabContentsEvent event) {
-        if (!event.getTabKey().equals(ModCreativeModeTabs.SINGULARITY_CREATIVE_TAB.getKey())) {
+        if (!event.getTabKey().equals(ModCreativeModeTabs.CREATIVE_TAB_SINGULARITIES.getKey())) {
             return;
         }
         for (int compound = 0; compound < compoundCount; compound++) {
@@ -193,5 +192,14 @@ public final class EternalSingularityCompressionHandler {
             event.getToolTip().add(Component.translatable(CompoundSingularityType.ROBOTIC.getTooltipKey())
                     .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
         }
+    }
+
+    public record Candidate(
+            ResourceLocation tag,
+            int count,
+            int timeCost,
+            int overlayColor,
+            int underlayColor,
+            String displayName) {
     }
 }

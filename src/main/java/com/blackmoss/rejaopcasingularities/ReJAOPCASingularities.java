@@ -1,8 +1,6 @@
 package com.blackmoss.rejaopcasingularities;
 
-import java.util.Arrays;
-import java.util.List;
-
+import com.blackmoss.rejaopcasingularities.compat.avaritia.EternalSingularityCompressionHandler;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -16,7 +14,8 @@ import net.minecraftforge.registries.RegistryObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.blackmoss.rejaopcasingularities.compat.avaritia.EternalSingularityCompressionHandler;
+import java.util.Arrays;
+import java.util.List;
 
 @Mod(ReJAOPCASingularities.MODID)
 public class ReJAOPCASingularities {
@@ -32,6 +31,11 @@ public class ReJAOPCASingularities {
                                     .stacksTo(64)
                                     .rarity(Rarity.EPIC))))
                     .toList();
+
+    public ReJAOPCASingularities(IEventBus modEventBus, ModContainer modContainer) {
+        ITEMS.register(modEventBus);
+        modEventBus.addListener(EternalSingularityCompressionHandler::onBuildCreativeModeTabContents);
+    }
 
     public static ResourceLocation identifier(String path) {
         return ResourceLocation.fromNamespaceAndPath(MODID, path);
@@ -49,10 +53,5 @@ public class ReJAOPCASingularities {
         return CompoundSingularityType.byId(id)
                 .map(ReJAOPCASingularities::compoundSingularity)
                 .orElse(ItemStack.EMPTY);
-    }
-
-    public ReJAOPCASingularities(IEventBus modEventBus, ModContainer modContainer) {
-        ITEMS.register(modEventBus);
-        modEventBus.addListener(EternalSingularityCompressionHandler::onBuildCreativeModeTabContents);
     }
 }
