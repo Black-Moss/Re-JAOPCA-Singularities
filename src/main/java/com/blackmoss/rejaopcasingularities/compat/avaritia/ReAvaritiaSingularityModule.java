@@ -14,11 +14,11 @@ import net.minecraft.server.packs.PackType;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.neoforged.fml.loading.FMLPaths;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.server.ServerStartedEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.loading.FMLPaths;
 import thelm.jaopca.api.config.IDynamicSpecConfig;
 import thelm.jaopca.api.helpers.IMiscHelper;
 import thelm.jaopca.api.materials.IMaterial;
@@ -116,7 +116,7 @@ public class ReAvaritiaSingularityModule implements IModule {
     }
 
     @Override
-    public void onMaterialConfigAvailable(IModuleData moduleData, Map<IMaterial, IDynamicSpecConfig> configs) {
+    public void defineMaterialConfig(IModuleData moduleData, Map<IMaterial, IDynamicSpecConfig> configs) {
         this.configs = configs;
     }
 
@@ -127,11 +127,11 @@ public class ReAvaritiaSingularityModule implements IModule {
         }
         if (!listenersRegistered) {
             listenersRegistered = true;
-            NeoForge.EVENT_BUS.addListener(ReAvaritiaSingularityModule::registerSingularities);
-            NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, EternalSingularityCompressionHandler::onRegisterRecipes);
-            NeoForge.EVENT_BUS.addListener(EternalSingularityCompressionHandler::onItemToolTip);
-            NeoForge.EVENT_BUS.addListener(MaterialColorBridge::onMaterialColor);
-            NeoForge.EVENT_BUS.addListener(MaterialColorBridge::onSingularitiesReloaded);
+            MinecraftForge.EVENT_BUS.addListener(ReAvaritiaSingularityModule::registerSingularities);
+            MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST, EternalSingularityCompressionHandler::onRegisterRecipes);
+            MinecraftForge.EVENT_BUS.addListener(EternalSingularityCompressionHandler::onItemToolTip);
+            MinecraftForge.EVENT_BUS.addListener(MaterialColorBridge::onMaterialColor);
+            MinecraftForge.EVENT_BUS.addListener(MaterialColorBridge::onSingularitiesReloaded);
         }
         Set<IMaterial> materials = new TreeSet<>(moduleData.getMaterials());
         for (IMaterial material : materials) {
@@ -201,7 +201,7 @@ public class ReAvaritiaSingularityModule implements IModule {
             if (ingredient.isEmpty()) {
                 continue;
             }
-            Singularity singularity = new Singularity(ReJAOPCASingularities.id(name))
+            Singularity singularity = new Singularity(ReJAOPCASingularities.identifier(name))
                     .setDisplayName(candidate.displayName())
                     .setColors(candidate.overlayColor(), candidate.underlayColor())
                     .setIngredient(ingredient)
@@ -226,7 +226,7 @@ public class ReAvaritiaSingularityModule implements IModule {
         for (IMaterial material : materials) {
             english.addProperty(getTranslationKey(material), splitAndCapitalize(material.getName()));
         }
-        resourcePack.putJson(PackType.CLIENT_RESOURCES, ReJAOPCASingularities.id("lang/en_us.json"), english);
+        resourcePack.putJson(PackType.CLIENT_RESOURCES, ReJAOPCASingularities.identifier("lang/en_us.json"), english);
 
         Path langDir = FMLPaths.CONFIGDIR.get().resolve("jaopca").resolve("lang");
         try (DirectoryStream<Path> files = Files.newDirectoryStream(langDir, "*.json")) {
@@ -248,9 +248,6 @@ public class ReAvaritiaSingularityModule implements IModule {
                         if (name != null && name.isJsonPrimitive() && !name.getAsString().isEmpty()) {
                             lang.addProperty(getTranslationKey(material), name.getAsString());
                         }
-                    }
-                    if (!lang.isEmpty()) {
-                        resourcePack.putJson(PackType.CLIENT_RESOURCES, ReJAOPCASingularities.id("lang/" + language + ".json"), lang);
                     }
                 } catch (IOException | JsonParseException | UnsupportedOperationException e) {
                     ReJAOPCASingularities.LOGGER.warn("Unable to read JAOPCA localization file {}", file, e);

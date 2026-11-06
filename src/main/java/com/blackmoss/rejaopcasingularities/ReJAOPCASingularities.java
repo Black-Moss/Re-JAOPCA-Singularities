@@ -8,11 +8,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredRegister;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.ModContainer;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.RegistryObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -25,7 +25,7 @@ public class ReJAOPCASingularities {
 
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(Registries.ITEM, MODID);
 
-    public static final List<DeferredHolder<Item, Item>> COMPOUND_SINGULARITIES =
+    public static final List<RegistryObject<Item>> COMPOUND_SINGULARITIES =
             Arrays.stream(CompoundSingularityType.values())
                     .map(type -> ITEMS.register(type.getItemId(),
                             () -> new Item(new Item.Properties()
@@ -33,7 +33,7 @@ public class ReJAOPCASingularities {
                                     .rarity(Rarity.EPIC))))
                     .toList();
 
-    public static ResourceLocation id(String path) {
+    public static ResourceLocation identifier(String path) {
         return ResourceLocation.fromNamespaceAndPath(MODID, path);
     }
 

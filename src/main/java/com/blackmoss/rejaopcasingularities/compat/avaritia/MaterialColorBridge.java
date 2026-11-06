@@ -6,8 +6,8 @@ import committee.nova.mods.avaritia.core.singularity.SingularityEvent;
 import committee.nova.mods.avaritia.core.singularity.SingularityReloadListener;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.fml.loading.FMLEnvironment;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import thelm.jaopca.api.materials.IMaterial;
 import thelm.jaopca.api.materials.MaterialColorEvent;
 
@@ -26,7 +26,7 @@ public final class MaterialColorBridge {
             return;
         }
         IMaterial material = event.getMaterial();
-        COLORS.put(ReJAOPCASingularities.id(material.getName()), event.getColor() & 0xFFFFFF);
+        COLORS.put(ReJAOPCASingularities.identifier(material.getName()), event.getColor() & 0xFFFFFF);
         Minecraft minecraft = Minecraft.getInstance();
         minecraft.execute(MaterialColorBridge::applyColors);
     }
