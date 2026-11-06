@@ -40,7 +40,7 @@ public class ReJAOPCASingularities {
     }
 
     public static ResourceLocation identifier(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MODID, path);
+        return new ResourceLocation(MODID, path);
     }
 
     public static ItemStack compoundSingularity(CompoundSingularityType type) {

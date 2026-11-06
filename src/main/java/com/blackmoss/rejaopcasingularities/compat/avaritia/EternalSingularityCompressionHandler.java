@@ -34,7 +34,7 @@ public final class EternalSingularityCompressionHandler {
     public static final int SINGULARITIES_PER_COMPOUND = 81;
 
     public static final ResourceLocation ETERNAL_SINGULARITY_RECIPE_ID =
-            ResourceLocation.fromNamespaceAndPath("avaritia", "eternal_singularity");
+            new ResourceLocation("avaritia", "eternal_singularity");
 
     public static final Map<String, Candidate> CANDIDATES = new TreeMap<>();
 
@@ -56,7 +56,7 @@ public final class EternalSingularityCompressionHandler {
     private EternalSingularityCompressionHandler() {
     }
 
-    public static void onRegisterRecipes(RegisterRecipesEvent event) {
+    public static void refreshUsable() {
         USABLE.clear();
         for (Map.Entry<String, Candidate> entry : CANDIDATES.entrySet()) {
             if (tagSize(entry.getValue().tag()) > 0) {
@@ -68,7 +68,10 @@ public final class EternalSingularityCompressionHandler {
         }
         ReJAOPCASingularities.LOGGER.info("{} of {} JAOPCA materials have items in their tags",
                 USABLE.size(), CANDIDATES.size());
+    }
 
+    public static void onRegisterRecipes(RegisterRecipesEvent event) {
+        refreshUsable();
         injectCompressorRecipes(event);
 
         List<Singularity> singularities = new ArrayList<>();
@@ -76,6 +79,9 @@ public final class EternalSingularityCompressionHandler {
             singularities.add(candidateSingularity(name, CANDIDATES.get(name)));
         }
         for (Singularity singularity : SingularityReloadListener.INSTANCE.getAllSingularities().values()) {
+            if (singularity.getRegistryName().getNamespace().equals(ReJAOPCASingularities.MODID)) {
+                continue;
+            }
             Ingredient ingredient = singularity.getIngredient();
             if (ingredient != Ingredient.EMPTY && !ingredient.isEmpty()) {
                 singularities.add(singularity);

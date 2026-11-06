@@ -105,6 +105,7 @@ public class ReAvaritiaSingularityModule implements IModule {
     }
 
     private static void registerSingularities(ServerStartedEvent event) {
+        EternalSingularityCompressionHandler.refreshUsable();
         SingularityReloadListener listener = SingularityReloadListener.INSTANCE;
         int registered = 0;
         for (String name : EternalSingularityCompressionHandler.USABLE) {
@@ -133,6 +134,8 @@ public class ReAvaritiaSingularityModule implements IModule {
         }
         listener.finalizeScriptTransaction();
         ReJAOPCASingularities.LOGGER.info("Registered {} Avaritia singularities from JAOPCA materials", registered);
+        ReJAOPCASingularities.LOGGER.info("Reloading data packs once so compressor recipes can see bound item tags");
+        event.getServer().reloadResources(event.getServer().getPackRepository().getSelectedIds());
     }
 
     private static int[] getColors(IMaterial material, IDynamicSpecConfig config) {
