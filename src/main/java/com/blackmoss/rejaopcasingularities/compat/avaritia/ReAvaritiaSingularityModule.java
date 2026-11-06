@@ -189,6 +189,8 @@ public class ReAvaritiaSingularityModule implements IModule {
     }
 
     private static void registerSingularities(ServerStartedEvent event) {
+        // 到这一步物品标签已经绑定，重新算一次可用材料
+        EternalSingularityCompressionHandler.refreshUsable();
         SingularityReloadListener listener = SingularityReloadListener.INSTANCE;
         int registered = 0;
         for (String name : EternalSingularityCompressionHandler.USABLE) {
@@ -212,11 +214,16 @@ public class ReAvaritiaSingularityModule implements IModule {
             listener.registerSingularity(singularity);
             ++registered;
         }
-        if (registered == 0) {
-            return;
+        if (registered > 0) {
+            listener.finalizeScriptTransaction();
+            ReJAOPCASingularities.LOGGER.info("Registered {} Avaritia singularities from JAOPCA materials", registered);
         }
-        listener.finalizeScriptTransaction();
-        ReJAOPCASingularities.LOGGER.info("Registered {} Avaritia singularities from JAOPCA materials", registered);
+        if (EternalSingularityCompressionHandler.recipesDeferred) {
+            // 第一次配方加载时物品标签还没绑定，重载一次数据包让配方用已绑定的标签重新生成
+            ReJAOPCASingularities.LOGGER.info("Reloading data packs to regenerate singularity recipes with bound tags");
+            event.getServer().execute(() -> event.getServer().reloadResources(
+                    event.getServer().getPackRepository().getSelectedIds()));
+        }
     }
 
     @Override

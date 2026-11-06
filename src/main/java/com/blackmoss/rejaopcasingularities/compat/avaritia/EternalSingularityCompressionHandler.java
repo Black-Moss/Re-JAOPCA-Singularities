@@ -4,8 +4,6 @@ import java.lang.reflect.Field;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 import committee.nova.mods.avaritia.Const;
 import committee.nova.mods.avaritia.api.init.event.RegisterRecipesEvent;
@@ -38,9 +36,9 @@ public final class EternalSingularityCompressionHandler {
     public static final ResourceLocation ETERNAL_SINGULARITY_RECIPE_ID =
             ResourceLocation.fromNamespaceAndPath("avaritia", "eternal_singularity");
 
-    public static final Map<String, Candidate> CANDIDATES = new TreeMap<>();
+    public static final Map<String, Candidate> CANDIDATES = new java.util.concurrent.ConcurrentSkipListMap<>();
 
-    public static final TreeSet<String> USABLE = new TreeSet<>();
+    public static final java.util.Set<String> USABLE = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     public record Candidate(ResourceLocation tag, int count, int timeCost, int overlayColor, int underlayColor, String displayName) {
     }
@@ -60,10 +58,12 @@ public final class EternalSingularityCompressionHandler {
 
     private static volatile int compoundCount;
 
+    public static volatile boolean recipesDeferred;
+
     private EternalSingularityCompressionHandler() {
     }
 
-    public static void onRegisterRecipes(RegisterRecipesEvent event) {
+    public static void refreshUsable() {
         USABLE.clear();
         for (Map.Entry<String, Candidate> entry : CANDIDATES.entrySet()) {
             if (tagSize(entry.getValue().tag()) > 0) {
@@ -75,6 +75,16 @@ public final class EternalSingularityCompressionHandler {
         }
         ReJAOPCASingularities.LOGGER.info("{} of {} JAOPCA materials have items in their tags",
                 USABLE.size(), CANDIDATES.size());
+    }
+
+    public static void onRegisterRecipes(RegisterRecipesEvent event) {
+        refreshUsable();
+        if (USABLE.isEmpty() && !CANDIDATES.isEmpty()) {
+            recipesDeferred = true;
+            ReJAOPCASingularities.LOGGER.info("Item tags are not bound yet, deferring singularity recipes to a reload");
+            return;
+        }
+        recipesDeferred = false;
 
         injectCompressorRecipes(event);
 
