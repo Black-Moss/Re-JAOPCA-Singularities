@@ -198,6 +198,10 @@ public final class EternalSingularityCompressionHandler {
             event.getToolTip().add(Component.translatable(CompoundSingularityType.ROBOTIC.getTooltipKey())
                     .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
         }
+        if (stack.is(ReJAOPCASingularities.compoundSingularity(CompoundSingularityType.SMELLY).getItem())) {
+            event.getToolTip().add(Component.translatable(CompoundSingularityType.SMELLY.getTooltipKey())
+                    .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
+        }
     }
 
     public record Candidate(

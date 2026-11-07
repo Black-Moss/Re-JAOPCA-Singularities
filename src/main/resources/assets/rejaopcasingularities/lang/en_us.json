@@ -5,6 +5,7 @@
   "rejaopcasingularities.configuration.material_count": "The amount of items required to create this material's singularity.",
   "rejaopcasingularities.configuration.material_time_cost": "The time required to create this material's singularity, in ticks. -1 uses the default value.",
   "tooltip.rejaopcasingularities.robotic_singularity": "I've started.",
+  "tooltip.rejaopcasingularities.smelly_singularity": "its coming! :)",
   "item.rejaopcasingularities.nitronic_singularity": "Nitronic Singularity",
   "item.rejaopcasingularities.psychotic_singularity": "Psychotic Singularity",
   "item.rejaopcasingularities.sphaghettic_singularity": "Sphaghettic Singularity",
