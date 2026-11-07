@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "rejaopcasingularities:item/scientific_singularity",
-    "layer1": "rejaopcasingularities:item/scientific_singularity_overlay"
-  }
-}

@@ -1,11 +1,18 @@
 package com.blackmoss.rejaopcasingularities;
 
 import com.blackmoss.rejaopcasingularities.compat.avaritia.EternalSingularityCompressionHandler;
+import com.blackmoss.rejaopcasingularities.data.ModItemTagsProvider;
+import com.blackmoss.rejaopcasingularities.data.ModModelProvider;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.data.DataGenerator;
+import net.minecraft.data.PackOutput;
+import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
+import net.minecraftforge.common.data.ExistingFileHelper;
+import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -16,6 +23,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Mod(ReJAOPCASingularities.MODID)
 public class ReJAOPCASingularities {
@@ -37,6 +45,7 @@ public class ReJAOPCASingularities {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         ITEMS.register(modEventBus);
         modEventBus.addListener(EternalSingularityCompressionHandler::onBuildCreativeModeTabContents);
+        modEventBus.addListener(ReJAOPCASingularities::onGatherData);
     }
 
     public static ResourceLocation identifier(String path) {
@@ -55,5 +64,18 @@ public class ReJAOPCASingularities {
         return CompoundSingularityType.byId(id)
                 .map(ReJAOPCASingularities::compoundSingularity)
                 .orElse(ItemStack.EMPTY);
+    }
+
+    public static void onGatherData(GatherDataEvent event) {
+        DataGenerator generator = event.getGenerator();
+        PackOutput output = generator.getPackOutput();
+        ExistingFileHelper helper = event.getExistingFileHelper();
+
+        generator.addProvider(event.includeClient(), new ModModelProvider(output, helper));
+        generator.addProvider(event.includeServer(), new ModItemTagsProvider(
+                output,
+                event.getLookupProvider(),
+                CompletableFuture.completedFuture(TagsProvider.TagLookup.empty()),
+                helper));
     }
 }

@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "rejaopcasingularities:item/nitronic_singularity",
+    "layer1": "rejaopcasingularities:item/nitronic_singularity_overlay"
+  }
+}
