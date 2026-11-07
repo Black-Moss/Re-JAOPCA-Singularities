@@ -10,7 +10,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
-import net.minecraft.world.level.block.Block;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -40,6 +39,12 @@ public class ReJAOPCASingularities {
                                     .rarity(Rarity.EPIC))))
                     .toList();
 
+    public ReJAOPCASingularities(IEventBus modEventBus, ModContainer modContainer) {
+        ITEMS.register(modEventBus);
+        modEventBus.addListener(EternalSingularityCompressionHandler::onBuildCreativeModeTabContents);
+        modEventBus.addListener(ReJAOPCASingularities::onGatherData);
+    }
+
     public static ResourceLocation identifier(String path) {
         return ResourceLocation.fromNamespaceAndPath(MODID, path);
     }
@@ -58,12 +63,6 @@ public class ReJAOPCASingularities {
                 .orElse(ItemStack.EMPTY);
     }
 
-    public ReJAOPCASingularities(IEventBus modEventBus, ModContainer modContainer) {
-        ITEMS.register(modEventBus);
-        modEventBus.addListener(EternalSingularityCompressionHandler::onBuildCreativeModeTabContents);
-        modEventBus.addListener(ReJAOPCASingularities::onGatherData);
-    }
-
     public static void onGatherData(GatherDataEvent event) {
         PackOutput output = event.getGenerator().getPackOutput();
         ExistingFileHelper helper = event.getExistingFileHelper();
@@ -75,7 +74,7 @@ public class ReJAOPCASingularities {
             event.addProvider(new ModItemTagsProvider(
                     output,
                     event.getLookupProvider(),
-                    CompletableFuture.completedFuture(TagsProvider.TagLookup.<Block>empty()),
+                    CompletableFuture.completedFuture(TagsProvider.TagLookup.empty()),
                     helper));
         }
     }

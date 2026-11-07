@@ -1,10 +1,7 @@
 package com.blackmoss.rejaopcasingularities.compat.avaritia;
 
-import java.lang.reflect.Field;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-
+import com.blackmoss.rejaopcasingularities.CompoundSingularityType;
+import com.blackmoss.rejaopcasingularities.ReJAOPCASingularities;
 import committee.nova.mods.avaritia.Const;
 import committee.nova.mods.avaritia.api.init.event.RegisterRecipesEvent;
 import committee.nova.mods.avaritia.common.crafting.recipe.CompressorRecipe;
@@ -26,8 +23,11 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
-import com.blackmoss.rejaopcasingularities.CompoundSingularityType;
-import com.blackmoss.rejaopcasingularities.ReJAOPCASingularities;
+
+import java.lang.reflect.Field;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 
 public final class EternalSingularityCompressionHandler {
     public static final int MAX_SINGULARITIES = 81;
@@ -39,11 +39,9 @@ public final class EternalSingularityCompressionHandler {
     public static final Map<String, Candidate> CANDIDATES = new java.util.concurrent.ConcurrentSkipListMap<>();
 
     public static final java.util.Set<String> USABLE = java.util.concurrent.ConcurrentHashMap.newKeySet();
-
-    public record Candidate(ResourceLocation tag, int count, int timeCost, int overlayColor, int underlayColor, String displayName) {
-    }
-
     private static final Field RECIPES_FIELD;
+    public static volatile boolean recipesDeferred;
+    private static volatile int compoundCount;
 
     static {
         Field field = null;
@@ -55,10 +53,6 @@ public final class EternalSingularityCompressionHandler {
         }
         RECIPES_FIELD = field;
     }
-
-    private static volatile int compoundCount;
-
-    public static volatile boolean recipesDeferred;
 
     private EternalSingularityCompressionHandler() {
     }
@@ -206,5 +200,9 @@ public final class EternalSingularityCompressionHandler {
             event.getToolTip().add(Component.translatable(CompoundSingularityType.ROBOTIC.getTooltipKey())
                     .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
         }
+    }
+
+    public record Candidate(ResourceLocation tag, int count, int timeCost, int overlayColor, int underlayColor,
+                            String displayName) {
     }
 }

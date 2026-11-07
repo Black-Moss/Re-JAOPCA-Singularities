@@ -1,6 +1,6 @@
-modLoader="javafml"
-loaderVersion="${loader_version_range}"
-license="${mod_license}"
+modLoader = "javafml"
+loaderVersion = "${loader_version_range}"
+license = "${mod_license}"
 issueTrackerURL = "https://github.com/Black-Moss/Re-JAOPCA-Singularities/issues"
 
 [[mods]]
