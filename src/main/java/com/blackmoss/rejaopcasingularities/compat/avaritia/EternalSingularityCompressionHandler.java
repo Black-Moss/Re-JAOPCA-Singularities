@@ -26,10 +26,9 @@ import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 
 public final class EternalSingularityCompressionHandler {
@@ -39,9 +38,9 @@ public final class EternalSingularityCompressionHandler {
     public static final ResourceLocation ETERNAL_SINGULARITY_RECIPE_ID =
             new ResourceLocation("avaritia", "eternal_singularity");
 
-    public static final Map<String, Candidate> CANDIDATES = new java.util.concurrent.ConcurrentSkipListMap<>();
+    public static final Map<String, Candidate> CANDIDATES = new ConcurrentSkipListMap<>();
 
-    public static final java.util.Set<String> USABLE = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    public static final Set<String> USABLE = ConcurrentHashMap.newKeySet();
     private static final Field RECIPES_FIELD;
     private static volatile int compoundCount;
 
