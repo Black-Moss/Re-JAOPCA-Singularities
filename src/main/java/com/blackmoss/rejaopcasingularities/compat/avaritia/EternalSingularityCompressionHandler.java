@@ -130,7 +130,7 @@ public final class EternalSingularityCompressionHandler {
             }
             ItemStack compressed = ReJAOPCASingularities.compoundSingularity(compound);
             event.addRecipe(new RecipeHolder<>(
-                    ReJAOPCASingularities.id("compressed_singularity_" + compound),
+                    ReJAOPCASingularities.identifier("compressed_singularity_" + compound),
                     new ShapelessTableCraftingRecipe(inputs, compressed, 4)));
             eternalInputs.add(Const.getStackIngredient(compressed));
         }
@@ -145,7 +145,7 @@ public final class EternalSingularityCompressionHandler {
             Candidate candidate = CANDIDATES.get(name);
             Ingredient ingredient = Ingredient.of(TagKey.create(Registries.ITEM, candidate.tag()));
             Singularity singularity = candidateSingularity(name, candidate);
-            event.addRecipe(new RecipeHolder<>(ReJAOPCASingularities.id(name + "_singularity"),
+            event.addRecipe(new RecipeHolder<>(ReJAOPCASingularities.identifier(name + "_singularity"),
                     new CompressorRecipe(ingredient, SingularityUtils.getItemForSingularity(singularity),
                             candidate.count(), candidate.timeCost())));
             ++added;
@@ -154,7 +154,7 @@ public final class EternalSingularityCompressionHandler {
     }
 
     private static Singularity candidateSingularity(String name, Candidate candidate) {
-        Singularity singularity = new Singularity(ReJAOPCASingularities.id(name));
+        Singularity singularity = new Singularity(ReJAOPCASingularities.identifier(name));
         singularity.setCount(candidate.count());
         if (candidate.timeCost() > 0) {
             singularity.setTimeCost(candidate.timeCost());

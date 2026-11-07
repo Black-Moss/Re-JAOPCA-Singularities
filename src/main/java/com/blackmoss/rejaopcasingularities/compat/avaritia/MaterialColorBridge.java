@@ -26,7 +26,7 @@ public final class MaterialColorBridge {
             return;
         }
         IMaterial material = event.getMaterial();
-        COLORS.put(ReJAOPCASingularities.id(material.getName()), event.getColor() & 0xFFFFFF);
+        COLORS.put(ReJAOPCASingularities.identifier(material.getName()), event.getColor() & 0xFFFFFF);
         Minecraft minecraft = Minecraft.getInstance();
         minecraft.execute(MaterialColorBridge::applyColors);
     }

@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "rejaopcasingularities:item/robotic_singularity",
+    "layer1": "rejaopcasingularities:item/robotic_singularity_overlay"
+  }
+}

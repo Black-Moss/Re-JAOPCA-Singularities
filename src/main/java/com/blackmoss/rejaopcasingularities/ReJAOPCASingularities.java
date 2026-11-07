@@ -1,22 +1,29 @@
 package com.blackmoss.rejaopcasingularities;
 
-import java.util.Arrays;
-import java.util.List;
-
+import com.blackmoss.rejaopcasingularities.compat.avaritia.EternalSingularityCompressionHandler;
+import com.blackmoss.rejaopcasingularities.data.ModItemTagsProvider;
+import com.blackmoss.rejaopcasingularities.data.ModModelProvider;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.data.PackOutput;
+import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
+import net.minecraft.world.level.block.Block;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.common.data.ExistingFileHelper;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.blackmoss.rejaopcasingularities.compat.avaritia.EternalSingularityCompressionHandler;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Mod(ReJAOPCASingularities.MODID)
 public class ReJAOPCASingularities {
@@ -33,7 +40,7 @@ public class ReJAOPCASingularities {
                                     .rarity(Rarity.EPIC))))
                     .toList();
 
-    public static ResourceLocation id(String path) {
+    public static ResourceLocation identifier(String path) {
         return ResourceLocation.fromNamespaceAndPath(MODID, path);
     }
 
@@ -54,5 +61,22 @@ public class ReJAOPCASingularities {
     public ReJAOPCASingularities(IEventBus modEventBus, ModContainer modContainer) {
         ITEMS.register(modEventBus);
         modEventBus.addListener(EternalSingularityCompressionHandler::onBuildCreativeModeTabContents);
+        modEventBus.addListener(ReJAOPCASingularities::onGatherData);
+    }
+
+    public static void onGatherData(GatherDataEvent event) {
+        PackOutput output = event.getGenerator().getPackOutput();
+        ExistingFileHelper helper = event.getExistingFileHelper();
+
+        if (event.includeClient()) {
+            event.addProvider(new ModModelProvider(output, helper));
+        }
+        if (event.includeServer()) {
+            event.addProvider(new ModItemTagsProvider(
+                    output,
+                    event.getLookupProvider(),
+                    CompletableFuture.completedFuture(TagsProvider.TagLookup.<Block>empty()),
+                    helper));
+        }
     }
 }

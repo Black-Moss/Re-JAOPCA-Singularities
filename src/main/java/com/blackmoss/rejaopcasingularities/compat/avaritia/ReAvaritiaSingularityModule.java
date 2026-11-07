@@ -203,7 +203,7 @@ public class ReAvaritiaSingularityModule implements IModule {
             if (ingredient.isEmpty()) {
                 continue;
             }
-            Singularity singularity = new Singularity(ReJAOPCASingularities.id(name))
+            Singularity singularity = new Singularity(ReJAOPCASingularities.identifier(name))
                     .setDisplayName(candidate.displayName())
                     .setColors(candidate.overlayColor(), candidate.underlayColor())
                     .setIngredient(ingredient)
@@ -233,7 +233,7 @@ public class ReAvaritiaSingularityModule implements IModule {
         for (IMaterial material : materials) {
             english.addProperty(getTranslationKey(material), splitAndCapitalize(material.getName()));
         }
-        resourcePack.putJson(PackType.CLIENT_RESOURCES, ReJAOPCASingularities.id("lang/en_us.json"), english);
+        resourcePack.putJson(PackType.CLIENT_RESOURCES, ReJAOPCASingularities.identifier("lang/en_us.json"), english);
 
         Path langDir = FMLPaths.CONFIGDIR.get().resolve("jaopca").resolve("lang");
         try (DirectoryStream<Path> files = Files.newDirectoryStream(langDir, "*.json")) {
@@ -257,7 +257,7 @@ public class ReAvaritiaSingularityModule implements IModule {
                         }
                     }
                     if (!lang.isEmpty()) {
-                        resourcePack.putJson(PackType.CLIENT_RESOURCES, ReJAOPCASingularities.id("lang/" + language + ".json"), lang);
+                        resourcePack.putJson(PackType.CLIENT_RESOURCES, ReJAOPCASingularities.identifier("lang/" + language + ".json"), lang);
                     }
                 } catch (IOException | JsonParseException | UnsupportedOperationException e) {
                     ReJAOPCASingularities.LOGGER.warn("Unable to read JAOPCA localization file {}", file, e);
